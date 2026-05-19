@@ -1,0 +1,50 @@
+/* Override global cursors so we only see the premium cursor */
+body, a, button, input, textarea, select {
+  cursor: none !important;
+}
+
+.premium-cursor {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 40px;
+  height: 40px;
+  pointer-events: none; /* Let clicks pass through it */
+  z-index: 999999;
+  /* Centering the cursor container directly over the mouse coordinates */
+  transform: translate(-50%, -50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cursor-dot {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  background-color: #D4AF37; /* Luxury Gold */
+  border-radius: 50%;
+  transition: transform 0.2s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.2s;
+  box-shadow: 0 0 10px rgba(212, 175, 55, 0.5);
+}
+
+.cursor-ring {
+  position: absolute;
+  width: 32px;
+  height: 32px;
+  border: 1px solid rgba(212, 175, 55, 0.6);
+  border-radius: 50%;
+  transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1), background-color 0.3s, border-color 0.3s;
+}
+
+/* Hover State - when hovering over a link or button */
+.premium-cursor.hovering .cursor-ring {
+  transform: scale(1.6);
+  background-color: rgba(212, 175, 55, 0.15);
+  border-color: transparent;
+}
+
+.premium-cursor.hovering .cursor-dot {
+  transform: scale(0);
+  opacity: 0;
+}
