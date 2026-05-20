@@ -53,8 +53,8 @@ export const books = {
   categories: () =>
     request('GET', '/books/categories'),
 
-  getById: (id) =>
-    request('GET', `/books/${id}`),
+  getById: (id, userId) =>
+    request('GET', `/books/${id}${userId ? '?userId=' + userId : ''}`),
 
   getReviews: (bookId) =>
     request('GET', `/books/${bookId}/reviews`),
@@ -177,7 +177,7 @@ export const admin = {
     request('GET', '/admin/reviews'),
 
   approveReview: (reviewId) =>
-    request('POST', `/admin/reviews/${reviewId}/approve`),
+    request('PUT', `/admin/reviews/${reviewId}/approve`),
 
   deleteReview: (reviewId) =>
     request('DELETE', `/admin/reviews/${reviewId}`),
@@ -225,6 +225,8 @@ export const articles = {
     request('POST', '/articles', data),
   getAll: () => 
     request('GET', '/articles'),
+  getById: (id) => 
+    request('GET', `/articles/${id}`),
   update: (id, fields) => 
     request('PUT', `/articles/${id}`, fields),
   delete: (id) => 

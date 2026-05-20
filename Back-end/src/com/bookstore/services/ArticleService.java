@@ -17,6 +17,14 @@ public class ArticleService {
                 .collect(Collectors.toList());
     }
 
+    public Article getArticleById(String id) {
+        if (id == null) return null;
+        return getAllArticles().stream()
+                .filter(a -> id.equals(a.getId()))
+                .findFirst()
+                .orElse(null);
+    }
+
     public Article createArticle(Article article) {
         article.setId(UUID.randomUUID().toString());
         if (article.getDate() == null || article.getDate().trim().isEmpty()) {

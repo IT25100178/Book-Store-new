@@ -22,14 +22,7 @@ public class Review {
 
     public Review(String id, String userId, String bookId, int rating,
                   String comment, String date, String userName) {
-        this.id       = id;
-        this.userId   = userId;
-        this.bookId   = bookId;
-        this.rating   = rating;
-        this.comment  = comment;
-        this.date     = date;
-        this.userName = userName;
-        this.approved = true;
+        this(id, userId, bookId, rating, comment, date, userName, false);
     }
 
     public Review(String id, String userId, String bookId, int rating,
@@ -70,6 +63,7 @@ public class Review {
     public boolean isApproved()                     { return approved; }
     public void    setApproved(boolean approved)    { this.approved = approved; }
 
+
     // ── Serialization ─────────────────────────────────────────────────────────
 
     /** Format: id|userId|bookId|rating|comment|date|userName|approved */
@@ -104,7 +98,7 @@ public class Review {
             + "\"comment\":\""   + esc(comment)  + "\","
             + "\"date\":\""      + esc(date)     + "\","
             + "\"userName\":\""  + esc(userName) + "\","
-            + "\"approved\":"    + approved      + ""
+            + "\"approved\":"    + approved
             + "}";
     }
 

@@ -114,7 +114,7 @@ public class UserHandler extends BaseHandler {
         if (Boolean.TRUE.equals(result.get("success"))) {
             sendSuccess(exchange, "{\"success\":true,\"message\":\"" + result.get("message") + "\"}");
         } else {
-            sendNotFound(exchange, "User");
+            sendError(exchange, 400, (String) result.getOrDefault("message", "Update failed"));
         }
     }
 

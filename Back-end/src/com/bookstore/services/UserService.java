@@ -52,24 +52,51 @@ public class UserService {
     public Map<String, Object> updateProfile(String userId, Map<String, String> fields) {
         Map<String, Object> result = new LinkedHashMap<>();
         List<User> users = readAllUsers();
-        boolean found = false;
+        User targetUser = null;
 
         for (User u : users) {
             if (u.getId().equals(userId)) {
-                found = true;
-                if (fields.containsKey("name"))    u.setName(fields.get("name"));
-                if (fields.containsKey("phone"))   u.setPhone(fields.get("phone"));
-                if (fields.containsKey("address")) u.setAddress(fields.get("address"));
-                if (fields.containsKey("avatar"))  u.setAvatar(fields.get("avatar"));
+                targetUser = u;
                 break;
             }
         }
 
-        if (!found) {
+        if (targetUser == null) {
             result.put("success", false);
             result.put("message", "User not found");
             return result;
         }
+
+        if (fields.containsKey("email")) {
+            String newEmail = fields.get("email");
+            if (newEmail != null && !newEmail.equalsIgnoreCase(targetUser.getEmail())) {
+                boolean exists = users.stream().anyMatch(usr -> usr.getEmail().equalsIgnoreCase(newEmail));
+                if (exists) {
+                    result.put("success", false);
+                    result.put("message", "Email is already in use");
+                    return result;
+                }
+                targetUser.setEmail(newEmail);
+            }
+        }
+
+        if (fields.containsKey("password")) {
+            String newPassword = fields.get("password");
+            if (newPassword != null && !newPassword.trim().isEmpty()) {
+                if (newPassword.length() < 6) {
+                    result.put("success", false);
+                    result.put("message", "Password must be at least 6 characters");
+                    return result;
+                }
+                targetUser.setPassword(newPassword);
+            }
+        }
+
+        if (fields.containsKey("name"))    targetUser.setName(fields.get("name"));
+        if (fields.containsKey("phone"))   targetUser.setPhone(fields.get("phone"));
+        if (fields.containsKey("address")) targetUser.setAddress(fields.get("address"));
+        if (fields.containsKey("avatar"))  targetUser.setAvatar(fields.get("avatar"));
+        if (fields.containsKey("bio"))     targetUser.setBio(fields.get("bio"));
 
         writeAllUsers(users);
         result.put("success", true);

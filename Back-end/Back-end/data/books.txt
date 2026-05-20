@@ -1,5 +1,7 @@
 BK001|The Great Gatsby|F. Scott Fitzgerald|14.99|24.99|4.5|Fiction|A story of decadence and excess exploring the darker aspects of the American Dream.|20|false|true|180|1925|📖
 BK002|To Kill a Mockingbird|Harper Lee|12.99|19.99|4.8|Classic|The unforgettable novel of a childhood in a sleepy Southern town and the crisis of conscience.|6|false|true|336|1960|📚
+BK001|The Great Gatsby|F. Scott Fitzgerald|14.99|24.99|4.5|Fiction|A story of decadence and excess exploring the darker aspects of the American Dream.|6|false|true|180|1925|📖
+BK002|To Kill a Mockingbird|Harper Lee|12.99|19.99|4.8|Classic|The unforgettable novel of a childhood in a sleepy Southern town and the crisis of conscience.|7|false|true|336|1960|📚
 BK003|1984|George Orwell|13.99|18.99|4.7|Dystopian|A dystopian social science fiction novel and cautionary tale against unchecked government power.|18|true|false|328|1949|📕
 BK004|Pride and Prejudice|Jane Austen|11.99|16.99|4.6|Romance|A romantic novel that also contains a sharp critique of the British class system.|11|false|true|279|1813|💕
 BK005|The Hobbit|J.R.R. Tolkien|15.99|22.99|4.9|Fantasy|A fantasy novel about Bilbo Baggins and his unexpected adventure with wizards and dwarves.|25|false|true|310|1937|🐉

@@ -53,6 +53,7 @@ public class Main {
         server.createContext("/api/authors", new AuthorHandler());
         server.createContext("/api/faqs", new FAQHandler());
         server.createContext("/api/articles", new ArticleHandler());
+        server.createContext("/api/admin/reviews", new AdminReviewHandler());
 
         // Thread pool to handle concurrent requests
         server.setExecutor(Executors.newFixedThreadPool(10));

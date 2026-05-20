@@ -136,6 +136,8 @@ public class BookService {
                 if (fields.containsKey("image"))       b.setImage(fields.get("image"));
                 if (fields.containsKey("isNew"))       b.setNew(Boolean.parseBoolean(fields.get("isNew")));
                 if (fields.containsKey("isBestseller")) b.setBestseller(Boolean.parseBoolean(fields.get("isBestseller")));
+                if (fields.containsKey("isPdf"))       b.setPdf(Boolean.parseBoolean(fields.get("isPdf")));
+                if (fields.containsKey("pdfUrl"))      b.setPdfUrl(fields.get("pdfUrl"));
             }
             lines.add(b.toFileLine());
         }

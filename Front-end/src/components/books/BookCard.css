@@ -97,6 +97,17 @@
   transform: scale(1.1);
 }
 
+.modern-wishlist-btn.in-wishlist {
+  background: rgba(255, 59, 48, 0.95);
+  border-color: rgba(255, 59, 48, 1);
+  color: #fff;
+}
+
+.modern-wishlist-btn.in-wishlist:hover {
+  background: rgba(255, 59, 48, 1);
+  transform: scale(1.15);
+}
+
 .modern-book-content {
   padding: 1.5rem;
   display: flex;

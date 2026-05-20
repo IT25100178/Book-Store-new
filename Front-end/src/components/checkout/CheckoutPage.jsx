@@ -7,6 +7,39 @@ import { useCart } from '../../context/CartContext';
 import { orders as ordersApi, users as usersApi } from '../../services/api';
 import './CheckoutPage.css';
 
+const validateCardNumber = (number) => {
+  const digits = number.replace(/\D/g, '');
+  if (digits.length < 13 || digits.length > 19) return false;
+  
+  let sum = 0;
+  let shouldDouble = false;
+  for (let i = digits.length - 1; i >= 0; i--) {
+    let digit = parseInt(digits.charAt(i), 10);
+    if (shouldDouble) {
+      digit *= 2;
+      if (digit > 9) digit -= 9;
+    }
+    sum += digit;
+    shouldDouble = !shouldDouble;
+  }
+  return sum % 10 === 0;
+};
+
+const validateExpiryDate = (expiry) => {
+  if (!expiry.includes('/')) return false;
+  const parts = expiry.split('/');
+  if (parts.length !== 2) return false;
+  const monthStr = parts[0].trim();
+  const yearStr = parts[1].trim();
+  
+  if (!/^\d{2}$/.test(monthStr)) return false;
+  const month = parseInt(monthStr, 10);
+  if (month < 1 || month > 12) return false;
+  
+  if (!/^\d{2}$|^\d{4}$/.test(yearStr)) return false;
+  return true;
+};
+
 const DELIVERY_OPTIONS = [
   { id: 'STANDARD', label: 'Standard Delivery',  time: '5–7 business days',  price: 4.99 },
   { id: 'EXPRESS',  label: 'Express Delivery',    time: '1–2 business days',  price: 9.99 },
@@ -41,6 +74,11 @@ export default function CheckoutPage() {
   const [loading,         setLoading]         = useState(false);
   const [errors,          setErrors]          = useState({});
   const [saveAddress,     setSaveAddress]     = useState(false);
+  const [cardDetails,     setCardDetails]     = useState({
+    cardNumber: '',
+    expiryDate: '',
+    cvv: '',
+  });
 
   // Credit Card state
   const [cardNumber,      setCardNumber]      = useState('');
@@ -57,15 +95,27 @@ export default function CheckoutPage() {
       const phoneStr = parts[1] || user.phone || '';
       const addrParts = parts[0].split(', ');
       
-      setAddress({
-        fullName: addrParts[0] || user.name || '',
-        line1: addrParts[1] || '',
-        city: addrParts[2] || '',
-        state: addrParts[3] ? addrParts[3].split(' ')[0] : '',
-        zip: addrParts[3] ? addrParts[3].split(' ')[1] : '',
-        country: addrParts[4] || 'Sri Lanka',
-        phone: phoneStr
-      });
+      if (addrParts.length > 1) {
+        setAddress({
+          fullName: addrParts[0] || user.name || '',
+          line1: addrParts[1] || '',
+          city: addrParts[2] || '',
+          state: addrParts[3] ? addrParts[3].split(' ')[0] : '',
+          zip: addrParts[3] ? addrParts[3].split(' ')[1] : '',
+          country: addrParts[4] || 'Sri Lanka',
+          phone: phoneStr
+        });
+      } else {
+        setAddress({
+          fullName: user.name || '',
+          line1: parts[0] || '',
+          city: '',
+          state: '',
+          zip: '',
+          country: 'Sri Lanka',
+          phone: phoneStr
+        });
+      }
       setErrors({});
     } catch(e) {
       setErrors({ general: 'Could not parse saved address.' });
@@ -145,7 +195,7 @@ export default function CheckoutPage() {
     setLoading(true);
 
     try {
-      const { ok, data } = await ordersApi.place({
+      const payload = {
         userId:         user.id,
         items:          buildItemsString(),
         subtotal:       cartTotal,
@@ -155,7 +205,9 @@ export default function CheckoutPage() {
         address:        buildAddressString(),
         deliveryType:   deliveryOption,
         ...(paymentMethod === 'ONLINE' ? { cardNumber, expiryDate, cvv } : {})
-      });
+      };
+
+      const { ok, data } = await ordersApi.place(payload);
 
       if (ok && data.success) {
         if (saveAddress) {

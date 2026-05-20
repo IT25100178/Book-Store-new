@@ -23,9 +23,19 @@ public class ArticleHandler extends BaseHandler {
 
         try {
             if ("GET".equals(method)) {
-                List<Article> articles = articleService.getAllArticles();
-                List<String> jsons = articles.stream().map(Article::toJson).collect(Collectors.toList());
-                sendSuccess(exchange, toJsonArray(jsons));
+                if (path.matches("/api/articles/.+")) {
+                    String id = path.substring(path.lastIndexOf('/') + 1);
+                    Article article = articleService.getArticleById(id);
+                    if (article != null) {
+                        sendSuccess(exchange, article.toJson());
+                    } else {
+                        sendNotFound(exchange, "Article");
+                    }
+                } else {
+                    List<Article> articles = articleService.getAllArticles();
+                    List<String> jsons = articles.stream().map(Article::toJson).collect(Collectors.toList());
+                    sendSuccess(exchange, toJsonArray(jsons));
+                }
             } else if ("POST".equals(method)) {
                 Map<String, String> data = FileStorage.parseJsonBody(readBody(exchange));
                 if (!data.containsKey("title") || !data.containsKey("content")) {

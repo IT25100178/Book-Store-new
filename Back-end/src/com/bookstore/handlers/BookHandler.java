@@ -129,7 +129,42 @@ public class BookHandler extends BaseHandler {
     private void handleGetBook(HttpExchange exchange, String bookId) throws IOException {
         Book book = bookService.findById(bookId);
         if (book == null) { sendNotFound(exchange, "Book"); return; }
-        sendSuccess(exchange, book.toJson());
+
+        Map<String, String> q = parseQuery(exchange.getRequestURI().getRawQuery());
+        String userId = q.get("userId");
+        boolean showPdf = false;
+
+        if (userId != null && !userId.isBlank()) {
+            com.bookstore.services.OrderService orderService = new com.bookstore.services.OrderService();
+            List<com.bookstore.models.Order> orders = orderService.getOrdersByUser(userId);
+            for (com.bookstore.models.Order o : orders) {
+                if (!"CANCELLED".equalsIgnoreCase(o.getStatus())) {
+                    String items = o.getItems();
+                    if (items != null) {
+                        for (String entry : items.split(",")) {
+                            String[] parts = entry.split(":");
+                            if (parts.length > 0 && parts[0].trim().equals(bookId)) {
+                                showPdf = true;
+                                break;
+                            }
+                        }
+                    }
+                }
+                if (showPdf) break;
+            }
+        }
+
+        if (book.isPdf() && !showPdf) {
+            Book safeBook = new Book(
+                book.getId(), book.getTitle(), book.getAuthor(), book.getPrice(),
+                book.getOriginalPrice(), book.getRating(), book.getCategory(),
+                book.getDescription(), book.getStock(), book.isNew(), book.isBestseller(),
+                book.getPages(), book.getYear(), book.getImage(), book.isPdf(), ""
+            );
+            sendSuccess(exchange, safeBook.toJson());
+        } else {
+            sendSuccess(exchange, book.toJson());
+        }
     }
 
     // ── GET /api/books/all/reviews ─────────────────────────────────────────────
@@ -144,7 +179,10 @@ public class BookHandler extends BaseHandler {
 
     private void handleGetReviews(HttpExchange exchange, String bookId) throws IOException {
         List<Review> reviews = userService.getReviewsByBook(bookId);
-        List<String> jsons  = reviews.stream().map(Review::toJson).collect(Collectors.toList());
+        List<String> jsons  = reviews.stream()
+            .filter(Review::isApproved)
+            .map(Review::toJson)
+            .collect(Collectors.toList());
         sendSuccess(exchange, toJsonArray(jsons));
     }
 
@@ -217,6 +255,8 @@ public class BookHandler extends BaseHandler {
         b.setPages(parseIntOrDefault(data.get("pages"), 0));
         b.setYear(parseIntOrDefault(data.get("year"), 0));
         b.setImage(data.getOrDefault("image", "📖"));
+        b.setPdf(Boolean.parseBoolean(data.getOrDefault("isPdf", "false")));
+        b.setPdfUrl(data.getOrDefault("pdfUrl", ""));
         return b;
     }
 

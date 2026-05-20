@@ -42,6 +42,7 @@ import AboutUs from './components/about/AboutUs';
 // ── Additional Pages ──────────────────────────────────────────────────────
 import AuthorsDirectory from './components/pages/AuthorsDirectory';
 import JournalPage from './components/pages/JournalPage';
+import JournalDetailsPage from './components/pages/JournalDetailsPage';
 import FAQPage from './components/pages/FAQPage';
 import ReturnsPolicy from './components/pages/ReturnsPolicy';
 import TermsOfService from './components/pages/TermsOfService';
@@ -69,6 +70,7 @@ function AnimatedRoutes() {
         {/* ── Additional Pages ── */}
         <Route path="/authors"           element={<AuthorsDirectory />} />
         <Route path="/journal"           element={<JournalPage />} />
+        <Route path="/journal/:id"       element={<JournalDetailsPage />} />
         <Route path="/faq"               element={<FAQPage />} />
         <Route path="/returns"           element={<ReturnsPolicy />} />
         <Route path="/terms"             element={<TermsOfService />} />

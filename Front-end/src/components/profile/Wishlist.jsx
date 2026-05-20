@@ -16,7 +16,18 @@ export default function Wishlist() {
   useEffect(() => {
     if (!user?.id) return;
     usersApi.getWishlist(user.id).then(({ ok, data }) => {
-      if (ok && Array.isArray(data)) setWishlist(data);
+      if (ok && Array.isArray(data)) {
+        const flattened = data.map(item => ({
+          id: item.bookId,
+          bookId: item.bookId,
+          title: item.book?.title,
+          author: item.book?.author,
+          image: item.book?.image,
+          rating: item.book?.rating,
+          price: item.book?.price,
+        }));
+        setWishlist(flattened);
+      }
     });
   }, [user]);
 

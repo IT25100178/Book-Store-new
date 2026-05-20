@@ -17,6 +17,7 @@ public class User {
     private String role;        // "USER" | "ADMIN"
     private String avatar;
     private String joinDate;
+    private String bio;
 
     // ── Constructors ─────────────────────────────────────────────────────────
 
@@ -25,6 +26,12 @@ public class User {
     public User(String id, String name, String email, String password,
                 String phone, String address, String role,
                 String avatar, String joinDate) {
+        this(id, name, email, password, phone, address, role, avatar, joinDate, "");
+    }
+
+    public User(String id, String name, String email, String password,
+                String phone, String address, String role,
+                String avatar, String joinDate, String bio) {
         this.id       = id;
         this.name     = name;
         this.email    = email;
@@ -34,6 +41,7 @@ public class User {
         this.role     = role;
         this.avatar   = avatar;
         this.joinDate = joinDate;
+        this.bio      = bio;
     }
 
     // ── Getters & Setters ────────────────────────────────────────────────────
@@ -65,16 +73,19 @@ public class User {
     public String getJoinDate()                    { return joinDate; }
     public void   setJoinDate(String joinDate)     { this.joinDate = joinDate; }
 
+    public String getBio()                 { return bio; }
+    public void   setBio(String bio)       { this.bio = bio; }
+
     // ── Serialization ─────────────────────────────────────────────────────────
 
     /**
      * Serialize to a pipe-delimited line for users.txt
-     * Format: id|name|email|password|phone|address|role|avatar|joinDate
+     * Format: id|name|email|password|phone|address|role|avatar|joinDate|bio
      */
     public String toFileLine() {
         return String.join("|",
             safe(id), safe(name), safe(email), safe(password),
-            safe(phone), safe(address), safe(role), safe(avatar), safe(joinDate)
+            safe(phone), safe(address), safe(role), safe(avatar), safe(joinDate), safe(bio)
         );
     }
 
@@ -84,9 +95,13 @@ public class User {
     public static User fromFileLine(String line) {
         String[] parts = line.split("\\|", -1);
         if (parts.length < 9) return null;
+        String bio = "";
+        if (parts.length > 9) {
+            bio = parts[9];
+        }
         return new User(
             parts[0], parts[1], parts[2], parts[3],
-            parts[4], parts[5], parts[6], parts[7], parts[8]
+            parts[4], parts[5], parts[6], parts[7], parts[8], bio
         );
     }
 
@@ -102,7 +117,8 @@ public class User {
             + "\"address\":\""  + esc(address)  + "\","
             + "\"role\":\""     + esc(role)     + "\","
             + "\"avatar\":\""   + esc(avatar)   + "\","
-            + "\"joinDate\":\"" + esc(joinDate) + "\""
+            + "\"joinDate\":\"" + esc(joinDate) + "\","
+            + "\"bio\":\""      + esc(bio)      + "\""
             + "}";
     }
 

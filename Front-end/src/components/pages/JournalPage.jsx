@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { articles as articlesApi } from '../../services/api';
 import './Pages.css';
 
@@ -101,12 +102,12 @@ export default function JournalPage() {
                 </div>
                 <h3 className="journal-title">{article.title}</h3>
                 <p className="journal-excerpt">{article.excerpt}</p>
-                <a href={`/journal/${article.id}`} className="journal-link" onClick={(e) => e.preventDefault()}>
+                <Link to={`/journal/${article.id}`} className="journal-link">
                   Read Article 
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ marginLeft: '4px' }}>
                     <path d="M5 12h14M12 5l7 7-7 7" />
                   </svg>
-                </a>
+                </Link>
               </div>
             </div>
           ))}

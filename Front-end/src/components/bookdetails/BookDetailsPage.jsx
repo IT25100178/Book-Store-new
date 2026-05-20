@@ -20,6 +20,7 @@ export default function BookDetailsPage() {
   const [activeTab, setActiveTab] = useState('description');
   const [quantity,  setQuantity]  = useState(1);
 
+
   // ── New review form ───────────────────────────────────────────────────────
   const [reviewRating,  setReviewRating]  = useState(5);
   const [reviewComment, setReviewComment] = useState('');
@@ -37,7 +38,7 @@ export default function BookDetailsPage() {
     async function load() {
       setLoading(true);
       const [bookRes, reviewRes] = await Promise.all([
-        booksApi.getById(id),
+        booksApi.getById(id, user?.id),
         booksApi.getReviews(id),
       ]);
       if (bookRes.ok) setBook(bookRes.data);
@@ -48,7 +49,8 @@ export default function BookDetailsPage() {
       setLoading(false);
     }
     load();
-  }, [id]);
+  }, [id, user?.id]);
+
 
   // ── Add to cart ───────────────────────────────────────────────────────────
   const handleAddToCart = async () => {
@@ -57,6 +59,7 @@ export default function BookDetailsPage() {
     setCartMsg(result.success ? '✓ Added to cart!' : (result.error || 'Failed'));
     setTimeout(() => setCartMsg(''), 3000);
   };
+
 
   // ── Submit review ─────────────────────────────────────────────────────────
   const handleSubmitReview = async (e) => {
@@ -133,6 +136,7 @@ export default function BookDetailsPage() {
           {book.isNew        && <span className="det-badge new">New</span>}
           {book.isBestseller && <span className="det-badge best">Bestseller</span>}
           {discount > 0      && <span className="det-badge disc">-{discount}%</span>}
+          {book.isPdf        && <span className="det-badge pdf" style={{ background: 'rgba(212,175,55,0.2)', color: '#FFD700', border: '1px solid rgba(212,175,55,0.4)' }}>PDF Format</span>}
         </div>
 
         {/* Right – Info */}
@@ -182,25 +186,49 @@ export default function BookDetailsPage() {
               <span>{quantity}</span>
               <button onClick={() => setQuantity(q => Math.min(book.stock || 99, q + 1))}>+</button>
             </div>
-                        <button
-              id="add-to-cart-details-btn"
-              className="det-add-cart"
-              onClick={handleAddToCart}
-              disabled={book.stock === 0}
-            >
-              {book.stock === 0 ? 'Out of Stock' : '🛒 Add to Cart'}
-            </button>
-            <button
-              className="det-add-cart"
-              onClick={() => handleAddToWishlist(book.id)}
-            >
-              Add to Wishlist
-            </button>
+            {book.isPdf && book.pdfUrl ? (
+              <a
+                href={book.pdfUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                id="read-pdf-details-btn"
+                className="det-read-pdf"
+                style={{
+                  background: 'linear-gradient(135deg, #FFD700, #D4AF37)',
+                  color: '#000',
+                  textDecoration: 'none',
+                  padding: '0.8rem 1.75rem',
+                  borderRadius: '12px',
+                  fontWeight: 700,
+                  fontSize: '1rem',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  transition: 'transform 0.2s, box-shadow 0.2s',
+                }}
+                onMouseOver={e => e.currentTarget.style.transform = 'translateY(-2px)'}
+                onMouseOut={e => e.currentTarget.style.transform = 'none'}
+              >
+                📖 Read PDF
+              </a>
+            ) : (
+              <button
+                id="add-to-cart-details-btn"
+                className="det-add-cart"
+                onClick={handleAddToCart}
+                disabled={book.stock === 0}
+              >
+                {book.stock === 0 ? 'Out of Stock' : '🛒 Add to Cart'}
+              </button>
+            )}
             <Link to="/cart" className="det-view-cart">View Cart</Link>
           </div>
 
-          {cartMsg && <p className="det-cart-msg">{cartMsg}</p>}
-          {wishlistMsg && <p className="det-cart-msg">{wishlistMsg}</p>}
+          {cartMsg && (
+            <p className="det-cart-msg">
+              {cartMsg}
+            </p>
+          )}
         </div>
       </div>
 

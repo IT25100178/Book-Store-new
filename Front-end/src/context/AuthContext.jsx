@@ -118,6 +118,7 @@ export function AuthProvider({ children }) {
       const { ok, data } = await usersApi.update(user.id, updates);
       if (ok && data.success) {
         const updated = { ...user, ...updates };
+        delete updated.password;
         const storage = localStorage.getItem('user') ? localStorage : sessionStorage;
         storage.setItem('user', JSON.stringify(updated));
         setUser(updated);
@@ -127,6 +128,7 @@ export function AuthProvider({ children }) {
     } catch (_) {
       // Offline fallback – update locally only
       const updated = { ...user, ...updates };
+      delete updated.password;
       const storage = localStorage.getItem('user') ? localStorage : sessionStorage;
       storage.setItem('user', JSON.stringify(updated));
       setUser(updated);

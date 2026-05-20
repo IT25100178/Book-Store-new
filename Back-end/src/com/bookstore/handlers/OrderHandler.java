@@ -216,6 +216,51 @@ public class OrderHandler extends BaseHandler {
 
     // ── Helpers ───────────────────────────────────────────────────────────────
 
+    private boolean validateCardNumber(String number) {
+        if (number == null) return false;
+        String digits = number.replaceAll("\\D", "");
+        if (digits.length() < 13 || digits.length() > 19) return false;
+
+        int sum = 0;
+        boolean shouldDouble = false;
+        for (int i = digits.length() - 1; i >= 0; i--) {
+            int digit = Character.getNumericValue(digits.charAt(i));
+            if (shouldDouble) {
+                digit *= 2;
+                if (digit > 9) digit -= 9;
+            }
+            sum += digit;
+            shouldDouble = !shouldDouble;
+        }
+        return sum % 10 == 0;
+    }
+
+    private boolean validateExpiryDate(String expiry) {
+        if (expiry == null || !expiry.contains("/")) return false;
+        String[] parts = expiry.split("/");
+        if (parts.length != 2) return false;
+        
+        String monthStr = parts[0].trim();
+        String yearStr = parts[1].trim();
+
+        if (!monthStr.matches("^\\d{2}$")) return false;
+        try {
+            int month = Integer.parseInt(monthStr);
+            if (month < 1 || month > 12) return false;
+        } catch (NumberFormatException e) {
+            return false;
+        }
+
+        if (!yearStr.matches("^\\d{2}$|^\\d{4}$")) return false;
+        
+        return true;
+    }
+
+    private boolean validateCVV(String cvv) {
+        if (cvv == null) return false;
+        return cvv.trim().matches("^\\d{3}$");
+    }
+
     private double parseDoubleOr(String s, double def) {
         try { return s != null ? Double.parseDouble(s.trim()) : def; }
         catch (NumberFormatException e) { return def; }

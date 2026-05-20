@@ -5,7 +5,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
-import { books as booksApi } from '../../services/api';
+import { books as booksApi, users as usersApi } from '../../services/api';
 import BookCard from './BookCard';
 import SearchBooks from './SearchBooks';
 import FilterByCategory from './FilterByCategory';
@@ -45,6 +45,7 @@ export default function BookListPage() {
   const [totalPages,       setTotalPages]       = useState(1);
   const [loading,          setLoading]          = useState(true);
   const [notification,     setNotification]     = useState('');
+  const [wishlist,         setWishlist]         = useState([]);
 
   // ── Filter / Sort State ───────────────────────────────────────────────────
   const [searchTerm,       setSearchTerm]       = useState('');
@@ -85,6 +86,46 @@ export default function BookListPage() {
   }, [searchTerm, selectedCategory, sortBy, sortOrder, currentPage]);
 
   useEffect(() => { fetchBooks(); }, [fetchBooks]);
+
+  // ── Fetch Wishlist ──────────────────────────────────────────────────────────
+  useEffect(() => {
+    if (user?.id) {
+      usersApi.getWishlist(user.id).then(({ ok, data }) => {
+        if (ok && Array.isArray(data)) {
+          setWishlist(data.map(item => item.bookId));
+        }
+      });
+    } else {
+      setWishlist([]);
+    }
+  }, [user]);
+
+  const handleToggleWishlist = async (book) => {
+    if (!user) { navigate('/login'); return; }
+    const bookId = book.id;
+    const isCurrentlyInWishlist = wishlist.includes(bookId);
+    if (isCurrentlyInWishlist) {
+      const { ok } = await usersApi.removeFromWishlist(user.id, bookId);
+      if (ok) {
+        setWishlist(prev => prev.filter(id => id !== bookId));
+        setNotification(`"${book.title}" removed from wishlist`);
+        setTimeout(() => setNotification(''), 3000);
+      } else {
+        setNotification('Failed to remove from wishlist');
+        setTimeout(() => setNotification(''), 3000);
+      }
+    } else {
+      const { ok } = await usersApi.addToWishlist(user.id, bookId);
+      if (ok) {
+        setWishlist(prev => [...prev, bookId]);
+        setNotification(`"${book.title}" added to wishlist!`);
+        setTimeout(() => setNotification(''), 3000);
+      } else {
+        setNotification('Failed to add to wishlist');
+        setTimeout(() => setNotification(''), 3000);
+      }
+    }
+  };
 
   // ── Fetch categories once ─────────────────────────────────────────────────
   useEffect(() => {
@@ -180,7 +221,13 @@ export default function BookListPage() {
           ) : books.length > 0 ? (
             <div className="books-grid">
               {books.map(book => (
-                <BookCard key={book.id} book={book} onAddToCart={handleAddToCart} />
+                <BookCard
+                  key={book.id}
+                  book={book}
+                  onAddToCart={handleAddToCart}
+                  inWishlist={wishlist.includes(book.id)}
+                  onToggleWishlist={handleToggleWishlist}
+                />
               ))}
             </div>
           ) : (

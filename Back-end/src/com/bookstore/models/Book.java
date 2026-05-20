@@ -22,6 +22,8 @@ public class Book {
     private int     pages;
     private int     year;
     private String  image;           // emoji or URL
+    private boolean isPdf;
+    private String  pdfUrl;
 
     // ── Constructors ─────────────────────────────────────────────────────────
 
@@ -31,6 +33,14 @@ public class Book {
                 double originalPrice, double rating, String category,
                 String description, int stock, boolean isNew, boolean isBestseller,
                 int pages, int year, String image) {
+        this(id, title, author, price, originalPrice, rating, category, description,
+             stock, isNew, isBestseller, pages, year, image, false, "");
+    }
+
+    public Book(String id, String title, String author, double price,
+                double originalPrice, double rating, String category,
+                String description, int stock, boolean isNew, boolean isBestseller,
+                int pages, int year, String image, boolean isPdf, String pdfUrl) {
         this.id            = id;
         this.title         = title;
         this.author        = author;
@@ -45,6 +55,8 @@ public class Book {
         this.pages         = pages;
         this.year          = year;
         this.image         = image;
+        this.isPdf         = isPdf;
+        this.pdfUrl        = pdfUrl;
     }
 
     // ── Getters & Setters ────────────────────────────────────────────────────
@@ -91,11 +103,17 @@ public class Book {
     public String  getImage()                       { return image; }
     public void    setImage(String image)           { this.image = image; }
 
+    public boolean isPdf()                          { return isPdf; }
+    public void    setPdf(boolean isPdf)            { this.isPdf = isPdf; }
+
+    public String  getPdfUrl()                      { return pdfUrl; }
+    public void    setPdfUrl(String pdfUrl)         { this.pdfUrl = pdfUrl; }
+
     // ── Serialization ─────────────────────────────────────────────────────────
 
     /**
      * Format: id|title|author|price|originalPrice|rating|category|description|
-     *          stock|isNew|isBestseller|pages|year|image
+     *          stock|isNew|isBestseller|pages|year|image|isPdf|pdfUrl
      */
     public String toFileLine() {
         return String.join("|",
@@ -103,7 +121,8 @@ public class Book {
             String.valueOf(price), String.valueOf(originalPrice),
             String.valueOf(rating), safe(category), safe(description),
             String.valueOf(stock), String.valueOf(isNew), String.valueOf(isBestseller),
-            String.valueOf(pages), String.valueOf(year), safe(image)
+            String.valueOf(pages), String.valueOf(year), safe(image),
+            String.valueOf(isPdf), safe(pdfUrl)
         );
     }
 
@@ -111,13 +130,22 @@ public class Book {
         String[] p = line.split("\\|", -1);
         if (p.length < 14) return null;
         try {
+            boolean isPdf = false;
+            String pdfUrl = "";
+            if (p.length > 14) {
+                isPdf = Boolean.parseBoolean(p[14]);
+            }
+            if (p.length > 15) {
+                pdfUrl = p[15];
+            }
             return new Book(
                 p[0], p[1], p[2],
                 Double.parseDouble(p[3]), Double.parseDouble(p[4]),
                 Double.parseDouble(p[5]), p[6], p[7],
                 Integer.parseInt(p[8]),
                 Boolean.parseBoolean(p[9]), Boolean.parseBoolean(p[10]),
-                Integer.parseInt(p[11]), Integer.parseInt(p[12]), p[13]
+                Integer.parseInt(p[11]), Integer.parseInt(p[12]), p[13],
+                isPdf, pdfUrl
             );
         } catch (NumberFormatException e) {
             return null;
@@ -139,7 +167,9 @@ public class Book {
             + "\"isBestseller\":"    + isBestseller               + ","
             + "\"pages\":"           + pages                      + ","
             + "\"year\":"            + year                       + ","
-            + "\"image\":\""         + esc(image)                 + "\""
+            + "\"image\":\""         + esc(image)                 + "\","
+            + "\"isPdf\":"           + isPdf                      + ","
+            + "\"pdfUrl\":\""        + esc(pdfUrl)                + "\""
             + "}";
     }
 
