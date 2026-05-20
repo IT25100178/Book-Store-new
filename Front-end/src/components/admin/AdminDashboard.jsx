@@ -180,6 +180,53 @@ export default function AdminDashboard() {
     }
   };
 
+  const handleReplyReview = async (reviewId, replyText) => {
+    if (!replyText || !replyText.trim()) return;
+    try {
+      const { ok, data } = await adminApi.replyToReview(reviewId, user.id, replyText);
+      if (ok) {
+        showToast("Reply submitted successfully!");
+        loadSection("reviews");
+      } else {
+        showToast(data?.message || "Failed to submit reply", "error");
+      }
+    } catch (_) {
+      showToast("Error submitting reply", "error");
+    }
+  };
+
+  const handleComplainReview = async (reviewId) => {
+    const reason = window.prompt("Enter reason for flagging this review:", "Violent/Inappropriate");
+    if (reason === null) return;
+    try {
+      const { ok, data } = await adminApi.complainReview(reviewId, user.id, reason || "Violent/Inappropriate");
+      if (ok) {
+        showToast("Review flagged successfully!");
+        loadSection("reviews");
+      } else {
+        showToast(data?.message || "Failed to flag review", "error");
+      }
+    } catch (_) {
+      showToast("Error flagging review", "error");
+    }
+  };
+
+  const handleBlockUser = async (targetUserId, block) => {
+    const actionStr = block ? "block" : "unblock";
+    if (!window.confirm(`Are you sure you want to ${actionStr} this user?`)) return;
+    try {
+      const { ok, data } = await adminApi.blockUser(targetUserId, user.id, block);
+      if (ok) {
+        showToast(`User ${actionStr}ed successfully!`);
+        loadSection("users");
+      } else {
+        showToast(data?.message || `Failed to ${actionStr} user`, "error");
+      }
+    } catch (_) {
+      showToast(`Error performing user moderation`, "error");
+    }
+  };
+
   const handleSaveBook = async (formData) => {
     setLoading(true);
     const res =
@@ -606,7 +653,24 @@ export default function AdminDashboard() {
                     <div className="user-avatar-sm">
                       {u.name?.charAt(0)?.toUpperCase()}
                     </div>
-                    <span>{u.name}</span>
+                    <span>
+                      {u.name}
+                      {u.isBlocked && (
+                        <span 
+                          style={{
+                            marginLeft: '8px', 
+                            background: 'rgba(239, 68, 68, 0.2)', 
+                            color: '#f87171', 
+                            border: '1px solid rgba(239, 68, 68, 0.4)',
+                            padding: '2px 6px',
+                            borderRadius: '4px',
+                            fontSize: '0.7rem'
+                          }}
+                        >
+                          BLOCKED
+                        </span>
+                      )}
+                    </span>
                   </div>
                 </td>
                 <td className="text-muted">{u.email}</td>
@@ -619,15 +683,34 @@ export default function AdminDashboard() {
                 </td>
                 <td className="text-muted mono">{u.joinDate}</td>
                 <td>
-                  {u.role !== "ADMIN" && (
-                    <button
-                      className="icon-btn delete"
-                      onClick={() => handleDeleteUser(u.id)}
-                      title="Delete"
-                    >
-                      ⊗
-                    </button>
-                  )}
+                  <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                    {u.role !== "ADMIN" && (
+                      <>
+                        <button
+                          className="icon-btn delete"
+                          onClick={() => handleDeleteUser(u.id)}
+                          title="Delete"
+                        >
+                          ⊗
+                        </button>
+                        <button
+                          onClick={() => handleBlockUser(u.id, !u.isBlocked)}
+                          style={{
+                            background: u.isBlocked ? 'rgba(52, 211, 153, 0.15)' : 'rgba(239, 68, 68, 0.15)',
+                            color: u.isBlocked ? '#34d399' : '#f87171',
+                            border: u.isBlocked ? '1px solid rgba(52, 211, 153, 0.3)' : '1px solid rgba(239, 68, 68, 0.3)',
+                            borderRadius: '6px',
+                            padding: '4px 10px',
+                            fontSize: '0.75rem',
+                            cursor: 'pointer',
+                            transition: 'all 0.2s'
+                          }}
+                        >
+                          {u.isBlocked ? 'Unblock' : 'Block'}
+                        </button>
+                      </>
+                    )}
+                  </div>
                 </td>
               </tr>
             ))}
@@ -1502,7 +1585,55 @@ export default function AdminDashboard() {
                     lineHeight: "1.4",
                   }}
                 >
-                  {r.comment}
+                  <div>{r.comment}</div>
+                  {r.isFlagged && (
+                    <div style={{
+                      marginTop: '6px',
+                      background: 'rgba(239, 68, 68, 0.15)',
+                      color: '#ff6b6b',
+                      padding: '4px 8px',
+                      borderRadius: '4px',
+                      fontSize: '0.75rem',
+                      display: 'inline-block',
+                      border: '1px solid rgba(239, 68, 68, 0.3)'
+                    }}>
+                      ⚠️ Flagged: {r.moderationReason}
+                    </div>
+                  )}
+                  {r.adminReply ? (
+                    <div style={{
+                      marginTop: '6px',
+                      paddingLeft: '12px',
+                      borderLeft: '2px solid #D4AF37',
+                      color: '#D4AF37',
+                      fontStyle: 'italic',
+                      fontSize: '0.8rem'
+                    }}>
+                      ↳ Admin Reply: {r.adminReply}
+                    </div>
+                  ) : (
+                    r.approved && (
+                      <div style={{ marginTop: '8px' }}>
+                        <button
+                          onClick={() => {
+                            const reply = window.prompt("Enter admin reply text:");
+                            if (reply) handleReplyReview(r.id, reply);
+                          }}
+                          style={{
+                            background: 'rgba(212,175,55,0.15)',
+                            color: '#D4AF37',
+                            border: '1px solid rgba(212,175,55,0.3)',
+                            borderRadius: '4px',
+                            padding: '2px 8px',
+                            fontSize: '0.75rem',
+                            cursor: 'pointer'
+                          }}
+                        >
+                          Reply
+                        </button>
+                      </div>
+                    )
+                  )}
                 </td>
                 <td>
                   {r.approved ? (
@@ -1534,7 +1665,7 @@ export default function AdminDashboard() {
                   )}
                 </td>
                 <td>
-                  <div className="action-btns">
+                  <div className="action-btns" style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                     {!r.approved && (
                       <button
                         className="icon-btn edit"
@@ -1552,6 +1683,23 @@ export default function AdminDashboard() {
                     >
                       ⊗
                     </button>
+                    {!r.isFlagged && (
+                      <button
+                        onClick={() => handleComplainReview(r.id)}
+                        title="Flag/Complain"
+                        style={{
+                          background: 'rgba(239, 68, 68, 0.15)',
+                          border: '1px solid rgba(239, 68, 68, 0.3)',
+                          color: '#f87171',
+                          borderRadius: '4px',
+                          padding: '2px 6px',
+                          fontSize: '0.75rem',
+                          cursor: 'pointer'
+                        }}
+                      >
+                        Flag
+                      </button>
+                    )}
                   </div>
                 </td>
               </tr>
@@ -2207,3 +2355,4 @@ function ArticleFormModal({ form, onSave, onClose }) {
     </div>
   );
 }
+

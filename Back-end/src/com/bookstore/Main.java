@@ -35,6 +35,7 @@ public class Main {
         FileStorage.ensureFile("authors.txt");
         FileStorage.ensureFile("faqs.txt");
         FileStorage.ensureFile("articles.txt");
+        FileStorage.ensureFile("cards.txt");
 
         // ── Seed data if files are empty ──────────────────────────────────────
         DataSeeder.seed();
@@ -47,6 +48,9 @@ public class Main {
         server.createContext("/api/books", new BookHandler());
         server.createContext("/api/cart", new CartHandler());
         server.createContext("/api/orders", new OrderHandler());
+        server.createContext("/api/checkout/payment", new OrderHandler());
+        server.createContext("/api/cards", new com.bookstore.handlers.PaymentCardHandler());
+        server.createContext("/api/payment/cards", new com.bookstore.handlers.PaymentCardHandler());
         server.createContext("/api/users", new UserHandler());
         server.createContext("/api/admin", new AdminHandler());
         server.createContext("/api/messages", new MessageHandler());
@@ -77,6 +81,10 @@ public class Main {
         System.out.println("║  DELETE /api/cart/remove                      ║");
         System.out.println("║  POST  /api/cart/discount                     ║");
         System.out.println("║  POST  /api/orders/place                      ║");
+        System.out.println("║  GET   /api/cards/{userId}                    ║");
+        System.out.println("║  GET   /api/payment/cards/{userId}            ║");
+        System.out.println("║  PUT   /api/cards/{id}                        ║");
+        System.out.println("║  DELETE /api/cards/{id}                       ║");
         System.out.println("║  GET   /api/orders/{userId}                   ║");
         System.out.println("║  GET   /api/users/{id}                        ║");
         System.out.println("║  PUT   /api/users/{id}                        ║");

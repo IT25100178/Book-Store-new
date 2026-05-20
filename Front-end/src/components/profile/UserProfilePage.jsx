@@ -10,6 +10,7 @@ import ChangePassword from './ChangePassword';
 import OrderHistory from './OrderHistory';
 import Wishlist from './Wishlist';
 import SavedAddress from './SavedAddress';
+import SavedPayment from './SavedPayment';
 import MyReviews from './MyReviews';
 import logoImg from '../../assets/Luxury books logo.png';
 import './profile.css';
@@ -20,6 +21,7 @@ const TABS = [
   { id: 'orders',   label: '📦 Order History'    },
   { id: 'wishlist', label: '❤️  Wishlist'         },
   { id: 'address',  label: '📍 Saved Address'    },
+  { id: 'payment',  label: '💳 Payment Method'   },
   { id: 'reviews',  label: '⭐ My Reviews'        },
   { id: 'logout',   label: '🚪 Logout'           },
 ];
@@ -54,6 +56,7 @@ export default function UserProfilePage() {
     orders:   <OrderHistory />,
     wishlist: <Wishlist />,
     address:  <SavedAddress />,
+    payment:  <SavedPayment />,
     reviews:  <MyReviews />,
   };
 

@@ -1,10 +1,12 @@
 package com.bookstore.handlers;
 
 import com.bookstore.models.Order;
+import com.bookstore.models.PaymentCard;
 import com.bookstore.server.BaseHandler;
 import com.bookstore.services.CartService;
 import com.bookstore.services.BookService;
 import com.bookstore.services.OrderService;
+import com.bookstore.services.PaymentCardService;
 import com.bookstore.storage.FileStorage;
 import com.sun.net.httpserver.HttpExchange;
 
@@ -26,6 +28,7 @@ import java.util.stream.Collectors;
 public class OrderHandler extends BaseHandler {
 
     private final OrderService orderService = new OrderService();
+    private final PaymentCardService paymentCardService = new PaymentCardService();
     private final CartService  cartService  = new CartService();
     private final BookService  bookService  = new BookService();
 
@@ -35,7 +38,7 @@ public class OrderHandler extends BaseHandler {
 
         String path   = exchange.getRequestURI().getPath();
         String method = exchange.getRequestMethod().toUpperCase();
-        String sub    = path.replaceFirst("^/api/orders", "");
+        String sub    = path.replaceFirst("^/api/(orders|checkout/payment)", "");
 
         try {
             if (sub.equals("/place") && "POST".equals(method)) {
@@ -80,12 +83,33 @@ public class OrderHandler extends BaseHandler {
         double subtotal      = parseDoubleOr(data.get("subtotal"), 0.0);
         double discountAmt   = parseDoubleOr(data.get("discountAmount"), 0.0);
 
+        String cardNumber    = data.get("cardNumber");
+        String expiryDate    = data.get("expiryDate");
+        String cvv           = data.get("cvv");
+        String cardNickname  = data.get("cardNickname");
+        boolean saveCard     = Boolean.parseBoolean(data.getOrDefault("saveCard", "false"));
+        boolean isDefault    = Boolean.parseBoolean(data.getOrDefault("isDefault", "false"));
+        String selectedCardId = data.get("selectedCardId");
+
         if ("ONLINE".equals(paymentMethod)) {
-            String cardNumber = data.get("cardNumber");
-            String expiryDate = data.get("expiryDate");
-            String cvv        = data.get("cvv");
-            if (!validateCreditCard(cardNumber, expiryDate, cvv)) {
-                sendBadRequest(exchange, "Invalid credit card details. Card must pass Luhn validation, Expiry must contain / and match MM/YY or MM/YYYY, and CVV must be exactly 3 digits.");
+            if (selectedCardId == null || selectedCardId.isBlank()) {
+                if (!validateCreditCard(cardNumber, expiryDate, cvv)) {
+                    sendBadRequest(exchange, "Invalid credit card details. Card must pass Luhn validation, Expiry must contain / and match MM/YY or MM/YYYY, and CVV must be exactly 3 digits.");
+                    return;
+                }
+            } else {
+                com.bookstore.models.PaymentCard selectedCard = paymentCardService.getCardById(selectedCardId);
+                if (selectedCard == null || !selectedCard.getUserId().equals(userId)) {
+                    sendBadRequest(exchange, "Saved card not found or unauthorized.");
+                    return;
+                }
+            }
+        }
+
+        if (saveCard && "ONLINE".equals(paymentMethod)) {
+            Map<String, Object> cardResult = paymentCardService.saveCard(userId, cardNumber, expiryDate, cardNickname, isDefault);
+            if (!Boolean.TRUE.equals(cardResult.get("success"))) {
+                sendBadRequest(exchange, (String) cardResult.get("message"));
                 return;
             }
         }

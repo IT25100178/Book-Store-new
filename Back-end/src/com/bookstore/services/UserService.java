@@ -6,7 +6,12 @@ import com.bookstore.models.Review;
 import com.bookstore.storage.FileStorage;
 
 import java.time.LocalDate;
-import java.util.*;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -303,6 +308,74 @@ public class UserService {
         return result;
     }
 
+    public Map<String, Object> replyToReview(String reviewId, String userId, String replyText) {
+        Map<String, Object> result = new LinkedHashMap<>();
+        List<Review> all = readAllReviews();
+        boolean found = false;
+
+        // Ensure user is admin and not blocked
+        User user = findById(userId);
+        if (user == null || !"ADMIN".equals(user.getRole()) || user.isBlocked()) {
+            result.put("success", false);
+            result.put("message", "Unauthorized. Only active admins can reply to reviews.");
+            return result;
+        }
+
+        for (Review r : all) {
+            if (r.getId().equals(reviewId)) {
+                r.setAdminReply(replyText);
+                r.setAdminRepliedAt(LocalDateTime.now().toString());
+                found = true;
+                break;
+            }
+        }
+
+        if (!found) {
+            result.put("success", false);
+            result.put("message", "Review not found");
+            return result;
+        }
+
+        FileStorage.writeLines(REVIEWS_FILE, all.stream().map(Review::toFileLine).collect(Collectors.toList()));
+        result.put("success", true);
+        result.put("message", "Reply added successfully");
+        return result;
+    }
+
+    public Map<String, Object> reportReview(String reviewId, String reporterId, String reason) {
+        Map<String, Object> result = new LinkedHashMap<>();
+        List<Review> all = readAllReviews();
+        boolean found = false;
+
+        User reporter = findById(reporterId);
+        if (reporter == null) {
+            result.put("success", false);
+            result.put("message", "Unauthorized. Reporter not found.");
+            return result;
+        }
+
+        for (Review r : all) {
+            if (r.getId().equals(reviewId)) {
+                r.setReported(true);
+                r.setReportReason(reason);
+                r.setReportedBy(reporterId);
+                found = true;
+                break;
+            }
+        }
+
+        if (!found) {
+            result.put("success", false);
+            result.put("message", "Review not found");
+            return result;
+        }
+
+        FileStorage.writeLines(REVIEWS_FILE, all.stream().map(Review::toFileLine).collect(Collectors.toList()));
+        result.put("success", true);
+        result.put("message", "Review reported successfully");
+        return result;
+    }
+
     public Map<String, Object> updateReview(String reviewId, String userId, int rating, String comment) {
         Map<String, Object> result = new LinkedHashMap<>();
         List<Review> all = readAllReviews();
@@ -345,6 +418,51 @@ public class UserService {
         FileStorage.writeLines(REVIEWS_FILE, all.stream().map(Review::toFileLine).collect(Collectors.toList()));
         result.put("success", true);
         result.put("message", "Review deleted successfully");
+        return result;
+    }
+
+    public Map<String, Object> flagReview(String reviewId, String reason) {
+        Map<String, Object> result = new LinkedHashMap<>();
+        List<Review> all = readAllReviews();
+        boolean found = false;
+        for (Review r : all) {
+            if (r.getId().equals(reviewId)) {
+                r.setFlagged(true);
+                r.setModerationReason(reason);
+                found = true;
+                break;
+            }
+        }
+        if (!found) {
+            result.put("success", false);
+            result.put("message", "Review not found");
+            return result;
+        }
+        FileStorage.writeLines(REVIEWS_FILE, all.stream().map(Review::toFileLine).collect(Collectors.toList()));
+        result.put("success", true);
+        result.put("message", "Review flagged as violent/inappropriate successfully");
+        return result;
+    }
+
+    public Map<String, Object> blockUser(String userId, boolean block) {
+        Map<String, Object> result = new LinkedHashMap<>();
+        List<User> users = readAllUsers();
+        boolean found = false;
+        for (User u : users) {
+            if (u.getId().equals(userId)) {
+                u.setBlocked(block);
+                found = true;
+                break;
+            }
+        }
+        if (!found) {
+            result.put("success", false);
+            result.put("message", "User not found");
+            return result;
+        }
+        writeAllUsers(users);
+        result.put("success", true);
+        result.put("message", "User account " + (block ? "blocked" : "unblocked") + " successfully");
         return result;
     }
 }

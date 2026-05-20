@@ -118,6 +118,12 @@ public class AuthService {
             return result;
         }
 
+        if (user.isBlocked()) {
+            result.put("success", false);
+            result.put("message", "Your account has been blocked. Access denied.");
+            return result;
+        }
+
         result.put("success", true);
         result.put("message", "Login successful!");
         result.put("user", user.toJson());

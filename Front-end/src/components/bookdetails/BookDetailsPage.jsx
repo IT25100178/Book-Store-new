@@ -5,7 +5,7 @@ import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
-import { books as booksApi, users as usersApi } from '../../services/api';
+import { admin as adminApi, books as booksApi, users as usersApi } from '../../services/api';
 import './BookDetailsPage.css';
 
 export default function BookDetailsPage() {
@@ -14,11 +14,16 @@ export default function BookDetailsPage() {
   const { addToCart } = useCart();
   const navigate = useNavigate();
 
-  const [book,      setBook]      = useState(null);
-  const [reviews,   setReviews]   = useState([]);
-  const [loading,   setLoading]   = useState(true);
-  const [activeTab, setActiveTab] = useState('description');
-  const [quantity,  setQuantity]  = useState(1);
+  const [book,           setBook]           = useState(null);
+  const [reviews,        setReviews]        = useState([]);
+  const [loading,        setLoading]        = useState(true);
+  const [activeTab,      setActiveTab]      = useState('description');
+  const [quantity,       setQuantity]       = useState(1);
+  const [wishlisted,     setWishlisted]     = useState(false);
+  const [wishlistLoading, setWishlistLoading] = useState(false);
+  const [editMode,       setEditMode]       = useState(false);
+  const [editBookData,   setEditBookData]   = useState(null);
+  const [actionMsg,      setActionMsg]      = useState('');
 
 
   // ── New review form ───────────────────────────────────────────────────────
@@ -28,19 +33,19 @@ export default function BookDetailsPage() {
   const [submitting,    setSubmitting]    = useState(false);
 
   const [cartMsg, setCartMsg] = useState('');
-  const [wishlistMsg, setWishlistMsg] = useState('');
 
 
 
 
   // ── Fetch book + reviews ──────────────────────────────────────────────────
   useEffect(() => {
-    async function load() {
+    async function loadBook() {
       setLoading(true);
       const [bookRes, reviewRes] = await Promise.all([
         booksApi.getById(id, user?.id),
         booksApi.getReviews(id),
       ]);
+
       if (bookRes.ok) setBook(bookRes.data);
       if (reviewRes.ok) {
         const list = Array.isArray(reviewRes.data) ? reviewRes.data : [];
@@ -48,8 +53,112 @@ export default function BookDetailsPage() {
       }
       setLoading(false);
     }
-    load();
+
+    loadBook();
   }, [id, user?.id]);
+
+  useEffect(() => {
+    let active = true;
+
+    async function loadWishlist() {
+      if (!user?.id || !book?.id) {
+        setWishlisted(false);
+        return;
+      }
+      setWishlistLoading(true);
+      const res = await usersApi.getWishlist(user.id);
+      if (!active) return;
+      if (res.ok && Array.isArray(res.data)) {
+        setWishlisted(res.data.some((item) =>
+          item.bookId === book.id || item.id === book.id || item.book?.id === book.id
+        ));
+      } else {
+        setWishlisted(false);
+      }
+      setWishlistLoading(false);
+    }
+
+    loadWishlist();
+    return () => { active = false; };
+  }, [user?.id, book?.id]);
+
+  const refreshBook = async () => {
+    setLoading(true);
+    const bookRes = await booksApi.getById(id, user?.id);
+    if (bookRes.ok) setBook(bookRes.data);
+    setLoading(false);
+  };
+
+  const showActionMessage = (message) => {
+    setActionMsg(message);
+    setTimeout(() => setActionMsg(''), 3500);
+  };
+
+  const handleToggleWishlist = async () => {
+    if (!user) { navigate('/login'); return; }
+    if (!book) return;
+
+    setWishlistLoading(true);
+    const res = wishlisted
+      ? await usersApi.removeFromWishlist(user.id, book.id)
+      : await usersApi.addToWishlist(user.id, book.id);
+
+    if (res.ok) {
+      setWishlisted(!wishlisted);
+      showActionMessage(wishlisted ? 'Removed from wishlist' : 'Saved to wishlist');
+    } else {
+      showActionMessage(res.data?.message || 'Unable to update wishlist');
+    }
+    setWishlistLoading(false);
+  };
+
+  const handleOpenEdit = () => {
+    if (!book) return;
+    setEditBookData({ ...book });
+    setEditMode(true);
+  };
+
+  const handleSaveBookUpdate = async () => {
+    if (!editBookData) return;
+    setLoading(true);
+    const fields = {
+      title: editBookData.title,
+      author: editBookData.author,
+      price: editBookData.price,
+      originalPrice: editBookData.originalPrice,
+      category: editBookData.category,
+      description: editBookData.description,
+      stock: editBookData.stock,
+      pages: editBookData.pages,
+      year: editBookData.year,
+      image: editBookData.image,
+      isNew: editBookData.isNew,
+      isBestseller: editBookData.isBestseller,
+      isPdf: editBookData.isPdf,
+      pdfUrl: editBookData.pdfUrl,
+    };
+    const res = await adminApi.updateBook(book.id, fields);
+    if (res.ok) {
+      showActionMessage('Book updated successfully');
+      setEditMode(false);
+      await refreshBook();
+    } else {
+      showActionMessage(res.data?.message || 'Save failed');
+    }
+    setLoading(false);
+  };
+
+  const handleDeleteBook = async () => {
+    if (!book) return;
+    if (!window.confirm('Are you sure you want to delete this book?')) return;
+    const res = await adminApi.deleteBook(book.id);
+    if (res.ok) {
+      showActionMessage('Book deleted successfully');
+      navigate('/books');
+    } else {
+      showActionMessage(res.data?.message || 'Delete failed');
+    }
+  };
 
 
   // ── Add to cart ───────────────────────────────────────────────────────────
@@ -221,13 +330,31 @@ export default function BookDetailsPage() {
                 {book.stock === 0 ? 'Out of Stock' : '🛒 Add to Cart'}
               </button>
             )}
+
+            <button
+              className={`det-wishlist-btn ${wishlisted ? 'saved' : ''}`}
+              onClick={handleToggleWishlist}
+              disabled={wishlistLoading}
+            >
+              {wishlistLoading ? 'Saving…' : wishlisted ? '♥ Saved' : '♡ Save to Wishlist'}
+            </button>
+
             <Link to="/cart" className="det-view-cart">View Cart</Link>
           </div>
 
-          {cartMsg && (
-            <p className="det-cart-msg">
-              {cartMsg}
-            </p>
+          {actionMsg && (
+            <p className="det-action-msg">{actionMsg}</p>
+          )}
+
+          {user?.role === 'ADMIN' && (
+            <div className="det-admin-actions">
+              <button className="det-admin-btn edit" onClick={handleOpenEdit}>
+                ✎ Edit Book
+              </button>
+              <button className="det-admin-btn delete" onClick={handleDeleteBook}>
+                ⊗ Delete Book
+              </button>
+            </div>
           )}
         </div>
       </div>
@@ -293,6 +420,11 @@ export default function BookDetailsPage() {
                       <span className="review-date">{r.date}</span>
                     </div>
                     <p className="review-comment">{r.comment}</p>
+                    {r.adminReply && (
+                      <div className="review-admin-reply">
+                        <span>Admin reply:</span> {r.adminReply}
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
@@ -325,6 +457,91 @@ export default function BookDetailsPage() {
           </div>
         )}
       </div>
+
+      {editMode && (
+        <div className="details-modal-overlay" onClick={() => setEditMode(false)}>
+          <div className="details-modal-card" onClick={(e) => e.stopPropagation()}>
+            <div className="details-modal-header">
+              <h3>Edit Book Details</h3>
+              <button className="details-modal-close" onClick={() => setEditMode(false)}>
+                ✕
+              </button>
+            </div>
+
+            <div className="details-modal-body">
+              <div className="details-modal-grid">
+                {[
+                  { key: 'title', label: 'Title', type: 'text' },
+                  { key: 'author', label: 'Author', type: 'text' },
+                  { key: 'category', label: 'Category', type: 'text' },
+                  { key: 'price', label: 'Price', type: 'number' },
+                  { key: 'originalPrice', label: 'Original Price', type: 'number' },
+                  { key: 'stock', label: 'Stock', type: 'number' },
+                  { key: 'pages', label: 'Pages', type: 'number' },
+                  { key: 'year', label: 'Year', type: 'number' },
+                  { key: 'image', label: 'Emoji Icon', type: 'text' },
+                  { key: 'pdfUrl', label: 'PDF URL', type: 'text' },
+                ].map((field) => (
+                  <label key={field.key} className="details-modal-field">
+                    <span>{field.label}</span>
+                    <input
+                      type={field.type}
+                      value={editBookData[field.key] ?? ''}
+                      onChange={(e) =>
+                        setEditBookData((prev) => ({
+                          ...prev,
+                          [field.key]: field.type === 'number' ? e.target.value : e.target.value,
+                        }))
+                      }
+                    />
+                  </label>
+                ))}
+                <div className="details-modal-field details-modal-switches">
+                  <label>
+                    <input
+                      type="checkbox"
+                      checked={!!editBookData.isNew}
+                      onChange={(e) =>
+                        setEditBookData((prev) => ({ ...prev, isNew: e.target.checked }))
+                      }
+                    />
+                    New Release
+                  </label>
+                  <label>
+                    <input
+                      type="checkbox"
+                      checked={!!editBookData.isBestseller}
+                      onChange={(e) =>
+                        setEditBookData((prev) => ({ ...prev, isBestseller: e.target.checked }))
+                      }
+                    />
+                    Bestseller
+                  </label>
+                  <label>
+                    <input
+                      type="checkbox"
+                      checked={!!editBookData.isPdf}
+                      onChange={(e) =>
+                        setEditBookData((prev) => ({ ...prev, isPdf: e.target.checked }))
+                      }
+                    />
+                    PDF Book
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <div className="details-modal-footer">
+              <button className="modal-cancel-btn" onClick={() => setEditMode(false)}>
+                Cancel
+              </button>
+              <button className="modal-save-btn" onClick={handleSaveBookUpdate}>
+                Save Changes
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

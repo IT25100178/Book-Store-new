@@ -181,6 +181,16 @@ export const admin = {
 
   deleteReview: (reviewId) =>
     request('DELETE', `/admin/reviews/${reviewId}`),
+
+  // Reviews reply & moderation
+  replyToReview: (reviewId, adminId, adminReply) =>
+    request('POST', `/admin/reviews/${reviewId}/reply`, { adminId, adminReply }),
+
+  complainReview: (reviewId, adminId, reason) =>
+    request('POST', `/admin/reviews/${reviewId}/complain`, { adminId, reason }),
+
+  blockUser: (userId, adminId, block) =>
+    request('PUT', `/admin/users/${userId}/block`, { adminId, block }),
 };
 
 // ── Messages / Contact (Member 8) ─────────────────────────────────────────────
@@ -231,4 +241,19 @@ export const articles = {
     request('PUT', `/articles/${id}`, fields),
   delete: (id) => 
     request('DELETE', `/articles/${id}`),
+};
+
+// ── Payment Cards (Online Payment Feature) ───────────────────────────────────
+export const cards = {
+  get: (userId) =>
+    request('GET', `/cards/${userId}`),
+
+  save: (userId, cardNumber, expiryDate) =>
+    request('POST', '/cards', { userId, cardNumber, expiryDate }),
+
+  update: (cardId, expiryDate) =>
+    request('PUT', `/cards/${cardId}`, { expiryDate }),
+
+  delete: (cardId) =>
+    request('DELETE', `/cards/${cardId}`),
 };

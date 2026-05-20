@@ -1,5 +1,9 @@
 package com.bookstore.models;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
+
 /**
  * OOP Model – User
  * Represents a registered user or admin in the system.
@@ -18,6 +22,8 @@ public class User {
     private String avatar;
     private String joinDate;
     private String bio;
+    private List<String> wishlist = new ArrayList<>();
+    private boolean isBlocked = false;
 
     // ── Constructors ─────────────────────────────────────────────────────────
 
@@ -76,16 +82,25 @@ public class User {
     public String getBio()                 { return bio; }
     public void   setBio(String bio)       { this.bio = bio; }
 
+    public List<String> getWishlist()              { return wishlist; }
+    public void         setWishlist(List<String> wishlist) {
+        this.wishlist = wishlist == null ? new ArrayList<>() : wishlist;
+    }
+
+    public boolean isBlocked() { return isBlocked; }
+    public void setBlocked(boolean isBlocked) { this.isBlocked = isBlocked; }
+
     // ── Serialization ─────────────────────────────────────────────────────────
 
     /**
      * Serialize to a pipe-delimited line for users.txt
-     * Format: id|name|email|password|phone|address|role|avatar|joinDate|bio
+     * Format: id|name|email|password|phone|address|role|avatar|joinDate|bio|isBlocked
      */
     public String toFileLine() {
         return String.join("|",
             safe(id), safe(name), safe(email), safe(password),
-            safe(phone), safe(address), safe(role), safe(avatar), safe(joinDate), safe(bio)
+            safe(phone), safe(address), safe(role), safe(avatar), safe(joinDate), safe(bio),
+            String.valueOf(isBlocked)
         );
     }
 
@@ -95,14 +110,15 @@ public class User {
     public static User fromFileLine(String line) {
         String[] parts = line.split("\\|", -1);
         if (parts.length < 9) return null;
-        String bio = "";
-        if (parts.length > 9) {
-            bio = parts[9];
-        }
-        return new User(
+        String bio = (parts.length > 9) ? parts[9] : "";
+        User u = new User(
             parts[0], parts[1], parts[2], parts[3],
             parts[4], parts[5], parts[6], parts[7], parts[8], bio
         );
+        if (parts.length >= 11) {
+            u.setBlocked(Boolean.parseBoolean(parts[10]));
+        }
+        return u;
     }
 
     /**
@@ -118,11 +134,20 @@ public class User {
             + "\"role\":\""     + esc(role)     + "\","
             + "\"avatar\":\""   + esc(avatar)   + "\","
             + "\"joinDate\":\"" + esc(joinDate) + "\","
-            + "\"bio\":\""      + esc(bio)      + "\""
+            + "\"bio\":\""      + esc(bio)      + "\","
+            + "\"isBlocked\":"  + isBlocked     + ","
+            + "\"wishlist\":"   + listToJsonArray(wishlist)
             + "}";
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────
+    
+    private String listToJsonArray(java.util.List<String> values) {
+        if (values == null || values.isEmpty()) return "[]";
+        return "[" + values.stream()
+            .map(v -> "\"" + esc(v) + "\"")
+            .collect(java.util.stream.Collectors.joining(",")) + "]";
+    }
 
     private String safe(String s) { return s == null ? "" : s; }
     private String esc(String s)  { return s == null ? "" : s.replace("\\", "\\\\").replace("\"", "\\\""); }

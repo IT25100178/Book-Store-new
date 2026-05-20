@@ -130,11 +130,6 @@ export default function Home() {
         backgroundAttachment: 'fixed'
       }}>
         <div className="hero-content animate-slide-up" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-          <div className="hero-badge">
-            <span className="badge-text">Read our launch article</span>
-            <svg className="badge-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-          </div>
-          
           <h1 className="hero-title" style={{ textAlign: 'center' }}>
             Discover Your <br />
             <div className="animated-title-wrapper">
