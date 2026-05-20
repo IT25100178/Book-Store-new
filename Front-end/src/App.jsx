@@ -19,7 +19,7 @@ import Home           from './components/home/Home';
 // ── Books (Member 2 – Deepika) ─────────────────────────────────────────────
 import BookListPage   from './components/books/BookListPage';
 
-// ── Book Details (Member 3 – Yuvaniya) ────────────────────────────────────
+// ── Book Details (Member 7 – Vishahan) ────────────────────────────────────
 import BookDetailsPage from './components/bookdetails/BookDetailsPage';
 
 // ── Cart (Member 4 – Lojeni) ──────────────────────────────────────────────
@@ -32,7 +32,7 @@ import OrderConfirmation from './components/checkout/OrderConfirmation';
 // ── Profile (Member 6 – Vishok) ───────────────────────────────────────────
 import UserProfilePage from './components/profile/UserProfilePage';
 
-// ── Admin (Member 7 – Vishahan) ───────────────────────────────────────────
+// ── Admin (Member 3 – Yuvaniya + Member 4 – Lojeni) ───────────────────────
 import AdminDashboard from './components/admin/AdminDashboard';
 
 // ── Contact & About (Members 8 & 9) ───────────────────────────────────────

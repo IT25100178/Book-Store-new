@@ -14,6 +14,7 @@ const SECTIONS = [
   { id: 'articles',   label: 'Journal',      icon: '📰' },
   { id: 'users',      label: 'Users',        icon: '◎' },
   { id: 'orders',     label: 'Orders',       icon: '◷' },
+  { id: 'reviews',    label: 'Reviews',      icon: '★' },
   { id: 'categories', label: 'Categories',   icon: '⊞' },
   { id: 'reports',    label: 'Analytics',    icon: '▲' },
 ];
@@ -38,6 +39,7 @@ export default function AdminDashboard() {
   const [articles, setArticles] = useState([]);
   const [users,    setUsers]    = useState([]);
   const [orders,   setOrders]   = useState([]);
+  const [reviews,  setReviews]  = useState([]);
   const [loading,  setLoading]  = useState(false);
   const [bookForm, setBookForm] = useState(null);
   const [authorForm, setAuthorForm] = useState(null);
@@ -94,6 +96,11 @@ export default function AdminDashboard() {
         case 'orders': {
           const { data } = await adminApi.getAllOrders();
           setOrders(Array.isArray(data) ? data : []);
+          break;
+        }
+        case 'reviews': {
+          const { data } = await adminApi.getAllReviews();
+          setReviews(Array.isArray(data) ? data : []);
           break;
         }
         case 'reports':
@@ -211,6 +218,27 @@ export default function AdminDashboard() {
     if (ok) { showToast(data.message || 'User deleted'); loadSection('users'); }
   };
 
+  const handleApproveReview = async (id) => {
+    const { ok, data } = await adminApi.approveReview(id);
+    if (ok) {
+      showToast(data.message || 'Review approved');
+      loadSection('reviews');
+    } else {
+      showToast('Failed to approve review', 'error');
+    }
+  };
+
+  const handleDeleteReview = async (id) => {
+    if (!window.confirm('Delete this review permanently?')) return;
+    const { ok, data } = await adminApi.deleteReview(id);
+    if (ok) {
+      showToast(data.message || 'Review deleted');
+      loadSection('reviews');
+    } else {
+      showToast('Failed to delete review', 'error');
+    }
+  };
+
   // ── DATA FILTERING LOGIC ──────────────────────────────────────────────────
   const filteredBooks = useMemo(() => {
     return books.filter(b => b.title.toLowerCase().includes(globalSearch.toLowerCase()) || b.author.toLowerCase().includes(globalSearch.toLowerCase()));
@@ -231,6 +259,14 @@ export default function AdminDashboard() {
   const filteredUsers = useMemo(() => {
     return users.filter(u => u.name?.toLowerCase().includes(globalSearch.toLowerCase()) || u.email?.toLowerCase().includes(globalSearch.toLowerCase()));
   }, [users, globalSearch]);
+
+  const filteredReviews = useMemo(() => {
+    return reviews.filter(r =>
+      r.userName?.toLowerCase().includes(globalSearch.toLowerCase()) ||
+      r.comment?.toLowerCase().includes(globalSearch.toLowerCase()) ||
+      r.bookId?.toLowerCase().includes(globalSearch.toLowerCase())
+    );
+  }, [reviews, globalSearch]);
 
   const sortedAndFilteredOrders = useMemo(() => {
     let result = orders.filter(o => o.id?.toString().includes(globalSearch) || o.userId?.toString().includes(globalSearch));
@@ -808,6 +844,64 @@ export default function AdminDashboard() {
     </div>
   );
 
+  const renderReviews = () => {
+    return (
+      <div className="section-body">
+        <div className="section-header-row">
+          <div>
+            <h2 className="section-title">User Reviews Moderation</h2>
+            <p className="section-subtitle">{reviews.length} user reviews submitted</p>
+          </div>
+        </div>
+
+        <div className="table-card">
+          <table className="admin-table">
+            <thead>
+              <tr>
+                <th style={{ width: '15%' }}>User</th>
+                <th style={{ width: '15%' }}>Book ID</th>
+                <th style={{ width: '10%' }}>Rating</th>
+                <th style={{ width: '40%' }}>Comment</th>
+                <th style={{ width: '10%' }}>Status</th>
+                <th style={{ width: '10%' }}>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredReviews.map(r => (
+                <tr key={r.id} className="table-row">
+                  <td style={{ fontWeight: '600', color: '#f0e6d3' }}>{r.userName || r.userId}</td>
+                  <td style={{ color: '#D4AF37' }}>{r.bookId}</td>
+                  <td>
+                    <div style={{ color: '#D4AF37', letterSpacing: '1px' }}>
+                      {'★'.repeat(r.rating) + '☆'.repeat(5 - r.rating)}
+                    </div>
+                  </td>
+                  <td className="text-muted" style={{ whiteSpace: 'normal', fontSize: '0.85rem' }}>{r.comment}</td>
+                  <td>
+                    {r.approved ? (
+                      <span className="cat-chip" style={{ background: 'rgba(52,211,153,0.15)', color: '#34d399', border: '1px solid rgba(52,211,153,0.3)' }}>Approved</span>
+                    ) : (
+                      <span className="cat-chip" style={{ background: 'rgba(245,158,11,0.15)', color: '#f59e0b', border: '1px solid rgba(245,158,11,0.3)' }}>Pending</span>
+                    )}
+                  </td>
+                  <td>
+                    <div className="action-btns">
+                      {!r.approved && (
+                        <button className="icon-btn edit" onClick={() => handleApproveReview(r.id)} title="Approve" style={{ color: '#34d399', fontSize: '1rem', border: '1px solid rgba(52,211,153,0.3)', padding: '2px 6px', borderRadius: '4px', background: 'transparent', cursor: 'pointer' }}>✓</button>
+                      )}
+                      <button className="icon-btn delete" onClick={() => handleDeleteReview(r.id)} title="Delete" style={{ color: '#f87171', fontSize: '1.1rem', background: 'transparent', cursor: 'pointer', border: 'none' }}>⊗</button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          {filteredReviews.length === 0 && <div className="empty-state">No reviews found</div>}
+        </div>
+      </div>
+    );
+  };
+
   const sectionMap = {
     dashboard: renderDashboard,
     books:     renderBooks,
@@ -816,6 +910,7 @@ export default function AdminDashboard() {
     articles:  renderArticles,
     users:     renderUsers,
     orders:    renderOrders,
+    reviews:   renderReviews,
     reports:   renderReports,
     categories:renderCategories,
   };

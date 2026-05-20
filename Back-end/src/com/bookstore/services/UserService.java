@@ -244,13 +244,35 @@ public class UserService {
 
         String id   = "REV" + System.currentTimeMillis();
         String date = LocalDate.now().toString();
-        Review rev  = new Review(id, userId, bookId, rating, comment, date, userName);
+        Review rev  = new Review(id, userId, bookId, rating, comment, date, userName, false);
 
         FileStorage.appendLine(REVIEWS_FILE, rev.toFileLine());
 
         result.put("success", true);
-        result.put("message", "Review added successfully");
+        result.put("message", "Review submitted for approval");
         result.put("review", rev.toJson());
+        return result;
+    }
+
+    public Map<String, Object> approveReview(String reviewId) {
+        Map<String, Object> result = new LinkedHashMap<>();
+        List<Review> all = readAllReviews();
+        boolean found = false;
+        for (Review r : all) {
+            if (r.getId().equals(reviewId)) {
+                r.setApproved(true);
+                found = true;
+                break;
+            }
+        }
+        if (!found) {
+            result.put("success", false);
+            result.put("message", "Review not found");
+            return result;
+        }
+        FileStorage.writeLines(REVIEWS_FILE, all.stream().map(Review::toFileLine).collect(Collectors.toList()));
+        result.put("success", true);
+        result.put("message", "Review approved successfully");
         return result;
     }
 

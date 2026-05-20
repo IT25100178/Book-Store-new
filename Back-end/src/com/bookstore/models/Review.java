@@ -14,6 +14,7 @@ public class Review {
     private String comment;
     private String date;
     private String userName; // denormalized for display
+    private boolean approved = true; // default to true
 
     // ── Constructors ─────────────────────────────────────────────────────────
 
@@ -28,6 +29,19 @@ public class Review {
         this.comment  = comment;
         this.date     = date;
         this.userName = userName;
+        this.approved = true;
+    }
+
+    public Review(String id, String userId, String bookId, int rating,
+                  String comment, String date, String userName, boolean approved) {
+        this.id       = id;
+        this.userId   = userId;
+        this.bookId   = bookId;
+        this.rating   = rating;
+        this.comment  = comment;
+        this.date     = date;
+        this.userName = userName;
+        this.approved = approved;
     }
 
     // ── Getters & Setters ────────────────────────────────────────────────────
@@ -53,13 +67,17 @@ public class Review {
     public String getUserName()                     { return userName; }
     public void   setUserName(String userName)      { this.userName = userName; }
 
+    public boolean isApproved()                     { return approved; }
+    public void    setApproved(boolean approved)    { this.approved = approved; }
+
     // ── Serialization ─────────────────────────────────────────────────────────
 
-    /** Format: id|userId|bookId|rating|comment|date|userName */
+    /** Format: id|userId|bookId|rating|comment|date|userName|approved */
     public String toFileLine() {
         return String.join("|",
             safe(id), safe(userId), safe(bookId),
-            String.valueOf(rating), safe(comment), safe(date), safe(userName)
+            String.valueOf(rating), safe(comment), safe(date), safe(userName),
+            String.valueOf(approved)
         );
     }
 
@@ -67,7 +85,11 @@ public class Review {
         String[] p = line.split("\\|", -1);
         if (p.length < 7) return null;
         try {
-            return new Review(p[0], p[1], p[2], Integer.parseInt(p[3]), p[4], p[5], p[6]);
+            boolean approvedVal = true;
+            if (p.length >= 8) {
+                approvedVal = Boolean.parseBoolean(p[7]);
+            }
+            return new Review(p[0], p[1], p[2], Integer.parseInt(p[3]), p[4], p[5], p[6], approvedVal);
         } catch (NumberFormatException e) {
             return null;
         }
@@ -81,7 +103,8 @@ public class Review {
             + "\"rating\":"      + rating        + ","
             + "\"comment\":\""   + esc(comment)  + "\","
             + "\"date\":\""      + esc(date)     + "\","
-            + "\"userName\":\""  + esc(userName) + "\""
+            + "\"userName\":\""  + esc(userName) + "\","
+            + "\"approved\":"    + approved      + ""
             + "}";
     }
 

@@ -171,6 +171,16 @@ export const admin = {
 
   getSalesSummary: () =>
     request('GET', '/orders/summary'),
+
+  // Reviews
+  getAllReviews: () =>
+    request('GET', '/admin/reviews'),
+
+  approveReview: (reviewId) =>
+    request('POST', `/admin/reviews/${reviewId}/approve`),
+
+  deleteReview: (reviewId) =>
+    request('DELETE', `/admin/reviews/${reviewId}`),
 };
 
 // ── Messages / Contact (Member 8) ─────────────────────────────────────────────

@@ -48,6 +48,7 @@ public class Main {
         server.createContext("/api/cart", new CartHandler());
         server.createContext("/api/orders", new OrderHandler());
         server.createContext("/api/users", new UserHandler());
+        server.createContext("/api/admin", new AdminHandler());
         server.createContext("/api/messages", new MessageHandler());
         server.createContext("/api/authors", new AuthorHandler());
         server.createContext("/api/faqs", new FAQHandler());

@@ -1,11 +1,11 @@
 // src/components/bookdetails/BookDetailsPage.jsx
-// Member 3 – Yuvaniya
+// Member 7 – Vishahan
 // Fetches a single book and its reviews from the Java backend
 import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
-import { books as booksApi } from '../../services/api';
+import { books as booksApi, users as usersApi } from '../../services/api';
 import './BookDetailsPage.css';
 
 export default function BookDetailsPage() {
@@ -26,8 +26,11 @@ export default function BookDetailsPage() {
   const [reviewMsg,     setReviewMsg]     = useState('');
   const [submitting,    setSubmitting]    = useState(false);
 
-  // ── Cart feedback ─────────────────────────────────────────────────────────
   const [cartMsg, setCartMsg] = useState('');
+  const [wishlistMsg, setWishlistMsg] = useState('');
+
+
+
 
   // ── Fetch book + reviews ──────────────────────────────────────────────────
   useEffect(() => {
@@ -38,7 +41,10 @@ export default function BookDetailsPage() {
         booksApi.getReviews(id),
       ]);
       if (bookRes.ok) setBook(bookRes.data);
-      if (reviewRes.ok) setReviews(Array.isArray(reviewRes.data) ? reviewRes.data : []);
+      if (reviewRes.ok) {
+        const list = Array.isArray(reviewRes.data) ? reviewRes.data : [];
+        setReviews(list.filter(r => r.approved !== false));
+      }
       setLoading(false);
     }
     load();
@@ -64,17 +70,20 @@ export default function BookDetailsPage() {
       comment:  reviewComment,
     });
     if (ok) {
-      setReviewMsg('Review submitted!');
+      setReviewMsg('Review submitted for moderation! It will appear once approved.');
       setReviewComment('');
       setReviewRating(5);
       // Refresh reviews
       const res = await booksApi.getReviews(id);
-      if (res.ok) setReviews(Array.isArray(res.data) ? res.data : []);
+      if (res.ok) {
+        const list = Array.isArray(res.data) ? res.data : [];
+        setReviews(list.filter(r => r.approved !== false));
+      }
     } else {
       setReviewMsg(data?.message || 'Submission failed');
     }
     setSubmitting(false);
-    setTimeout(() => setReviewMsg(''), 3000);
+    setTimeout(() => setReviewMsg(''), 4000);
   };
 
   // ── Average rating ────────────────────────────────────────────────────────
@@ -173,7 +182,7 @@ export default function BookDetailsPage() {
               <span>{quantity}</span>
               <button onClick={() => setQuantity(q => Math.min(book.stock || 99, q + 1))}>+</button>
             </div>
-            <button
+                        <button
               id="add-to-cart-details-btn"
               className="det-add-cart"
               onClick={handleAddToCart}
@@ -181,10 +190,17 @@ export default function BookDetailsPage() {
             >
               {book.stock === 0 ? 'Out of Stock' : '🛒 Add to Cart'}
             </button>
+            <button
+              className="det-add-cart"
+              onClick={() => handleAddToWishlist(book.id)}
+            >
+              Add to Wishlist
+            </button>
             <Link to="/cart" className="det-view-cart">View Cart</Link>
           </div>
 
           {cartMsg && <p className="det-cart-msg">{cartMsg}</p>}
+          {wishlistMsg && <p className="det-cart-msg">{wishlistMsg}</p>}
         </div>
       </div>
 

@@ -7,7 +7,6 @@ import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
 import EditProfile from './EditProfile';
 import ChangePassword from './ChangePassword';
-import UploadProfilePicture from './UploadProfilePicture';
 import OrderHistory from './OrderHistory';
 import Wishlist from './Wishlist';
 import SavedAddress from './SavedAddress';
@@ -18,7 +17,6 @@ import './profile.css';
 const TABS = [
   { id: 'profile',  label: '👤 Edit Profile'    },
   { id: 'password', label: '🔒 Change Password'  },
-  { id: 'picture',  label: '🖼️ Profile Picture'  },
   { id: 'orders',   label: '📦 Order History'    },
   { id: 'wishlist', label: '❤️  Wishlist'         },
   { id: 'address',  label: '📍 Saved Address'    },
@@ -50,13 +48,9 @@ export default function UserProfilePage() {
     navigate('/login');
   };
 
-  const displayInitial   = user?.name?.charAt(0)?.toUpperCase() || user?.email?.charAt(0)?.toUpperCase() || 'U';
-  const hasCustomAvatar  = user?.avatar && (user.avatar.startsWith('data:') || user.avatar.startsWith('http'));
-
   const CONTENT_MAP = {
     profile:  <EditProfile />,
     password: <ChangePassword />,
-    picture:  <UploadProfilePicture />,
     orders:   <OrderHistory />,
     wishlist: <Wishlist />,
     address:  <SavedAddress />,
@@ -72,14 +66,13 @@ export default function UserProfilePage() {
 
           {/* Sidebar */}
           <aside className="profile-sidebar">
-            <div className="sidebar-avatar-area">
-              <div className="sidebar-avatar">
-                {hasCustomAvatar ? (
-                  <img src={user.avatar} alt={user.name || 'User'} />
-                ) : displayInitial}
+            <div className="sidebar-avatar-area" style={{ textAlign: 'center', padding: '24px 16px' }}>
+              <div className="sidebar-name" style={{ fontSize: '1.2rem', fontWeight: 'bold', color: '#D4AF37', marginBottom: '4px' }}>
+                {user?.name || 'Reader'}
               </div>
-              <div className="sidebar-name">{user?.name || 'Reader'}</div>
-              <div className="sidebar-email">{user?.email || ''}</div>
+              <div className="sidebar-email" style={{ fontSize: '0.85rem', color: 'rgba(240,230,211,0.6)', marginBottom: '12px' }}>
+                {user?.email || ''}
+              </div>
               {user?.role === 'ADMIN' && (
                 <div style={{ marginTop:'0.5rem' }}>
                   <Link to="/admin" style={{
