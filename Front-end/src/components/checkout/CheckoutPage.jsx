@@ -42,6 +42,11 @@ export default function CheckoutPage() {
   const [errors,          setErrors]          = useState({});
   const [saveAddress,     setSaveAddress]     = useState(false);
 
+  // Credit Card state
+  const [cardNumber,      setCardNumber]      = useState('');
+  const [expiryDate,      setExpiryDate]      = useState('');
+  const [cvv,             setCvv]             = useState('');
+
   const handleUseSavedAddress = () => {
     if (!user?.address) {
       setErrors({ general: 'No saved address found in your profile.' });
@@ -84,6 +89,43 @@ export default function CheckoutPage() {
     if (!address.phone.trim())    e.phone    = 'Phone is required';
     if (!address.line1.trim())    e.line1    = 'Address is required';
     if (!address.city.trim())     e.city     = 'City is required';
+
+    if (paymentMethod === 'ONLINE') {
+      const cleanCard = cardNumber.replace(/\s+/g, '');
+      if (!cleanCard) {
+        e.cardNumber = 'Card number is required';
+      } else if (!/^\d{13,19}$/.test(cleanCard)) {
+        e.cardNumber = 'Card number must be 13 to 19 digits';
+      } else {
+        // Luhn Check
+        let sum = 0;
+        let shouldDouble = false;
+        for (let i = cleanCard.length - 1; i >= 0; i--) {
+          let digit = parseInt(cleanCard.charAt(i), 10);
+          if (shouldDouble) {
+            if ((digit *= 2) > 9) digit -= 9;
+          }
+          sum += digit;
+          shouldDouble = !shouldDouble;
+        }
+        if (sum % 10 !== 0) {
+          e.cardNumber = 'Invalid card number (fails Luhn check)';
+        }
+      }
+
+      if (!expiryDate) {
+        e.expiryDate = 'Expiry date is required';
+      } else if (!/^(0[1-9]|1[0-2])\/([0-9]{2}|[0-9]{4})$/.test(expiryDate)) {
+        e.expiryDate = 'Expiry must contain "/" and match MM/YY or MM/YYYY';
+      }
+
+      if (!cvv) {
+        e.cvv = 'CVV is required';
+      } else if (!/^\d{3}$/.test(cvv)) {
+        e.cvv = 'CVV must be strictly a 3-digit integer';
+      }
+    }
+
     setErrors(e);
     return Object.keys(e).length === 0;
   };
@@ -112,6 +154,7 @@ export default function CheckoutPage() {
         paymentMethod,
         address:        buildAddressString(),
         deliveryType:   deliveryOption,
+        ...(paymentMethod === 'ONLINE' ? { cardNumber, expiryDate, cvv } : {})
       });
 
       if (ok && data.success) {
@@ -234,7 +277,10 @@ export default function CheckoutPage() {
                     name="payment"
                     value={pm.id}
                     checked={paymentMethod === pm.id}
-                    onChange={() => setPaymentMethod(pm.id)}
+                    onChange={() => {
+                      setPaymentMethod(pm.id);
+                      setErrors(prev => ({ ...prev, cardNumber: '', expiryDate: '', cvv: '' }));
+                    }}
                   />
                   <span className="payment-icon">{pm.icon}</span>
                   <div className="payment-info">
@@ -244,6 +290,64 @@ export default function CheckoutPage() {
                 </label>
               ))}
             </div>
+
+            {paymentMethod === 'ONLINE' && (
+              <div className="credit-card-form animate-slide-down">
+                <h3>Card Details</h3>
+                <div className="form-field full-width">
+                  <label htmlFor="cardNumber">Card Number</label>
+                  <input
+                    id="cardNumber"
+                    type="text"
+                    placeholder="4111 1111 1111 1111"
+                    maxLength="24"
+                    value={cardNumber}
+                    onChange={(e) => {
+                      let val = e.target.value.replace(/\D/g, '');
+                      let formatted = val.match(/.{1,4}/g)?.join(' ') || val;
+                      setCardNumber(formatted);
+                      setErrors(prev => ({ ...prev, cardNumber: '' }));
+                    }}
+                    className={errors.cardNumber ? 'field-error' : ''}
+                  />
+                  {errors.cardNumber && <span className="error-msg">{errors.cardNumber}</span>}
+                </div>
+                <div className="form-grid">
+                  <div className="form-field">
+                    <label htmlFor="expiryDate">Expiry Date</label>
+                    <input
+                      id="expiryDate"
+                      type="text"
+                      placeholder="MM/YY or MM/YYYY"
+                      maxLength="7"
+                      value={expiryDate}
+                      onChange={(e) => {
+                        setExpiryDate(e.target.value);
+                        setErrors(prev => ({ ...prev, expiryDate: '' }));
+                      }}
+                      className={errors.expiryDate ? 'field-error' : ''}
+                    />
+                    {errors.expiryDate && <span className="error-msg">{errors.expiryDate}</span>}
+                  </div>
+                  <div className="form-field">
+                    <label htmlFor="cvv">CVV</label>
+                    <input
+                      id="cvv"
+                      type="password"
+                      placeholder="123"
+                      maxLength="3"
+                      value={cvv}
+                      onChange={(e) => {
+                        setCvv(e.target.value.replace(/\D/g, ''));
+                        setErrors(prev => ({ ...prev, cvv: '' }));
+                      }}
+                      className={errors.cvv ? 'field-error' : ''}
+                    />
+                    {errors.cvv && <span className="error-msg">{errors.cvv}</span>}
+                  </div>
+                </div>
+              </div>
+            )}
           </section>
         </div>
 

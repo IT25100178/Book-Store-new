@@ -27,7 +27,7 @@ public class DataSeeder {
         if (!lines.isEmpty()) return;   // already seeded
 
         // id|name|email|password|phone|address|role|avatar|joinDate
-        String admin = "ADMIN001|Vishahan Admin|admin@luxurybooks.com|admin123"
+        String admin = "ADMIN001|Yuvaniya Admin|admin@luxurybooks.com|admin123"
                 + "|(+94)742624977|132/1 Thalaiyadi Lane Jaffna"
                 + "|ADMIN"
                 + "|https://ui-avatars.com/api/?background=8B0000&color=fff&name=Admin"

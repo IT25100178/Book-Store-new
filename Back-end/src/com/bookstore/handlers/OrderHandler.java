@@ -80,6 +80,16 @@ public class OrderHandler extends BaseHandler {
         double subtotal      = parseDoubleOr(data.get("subtotal"), 0.0);
         double discountAmt   = parseDoubleOr(data.get("discountAmount"), 0.0);
 
+        if ("ONLINE".equals(paymentMethod)) {
+            String cardNumber = data.get("cardNumber");
+            String expiryDate = data.get("expiryDate");
+            String cvv        = data.get("cvv");
+            if (!validateCreditCard(cardNumber, expiryDate, cvv)) {
+                sendBadRequest(exchange, "Invalid credit card details. Card must pass Luhn validation, Expiry must contain / and match MM/YY or MM/YYYY, and CVV must be exactly 3 digits.");
+                return;
+            }
+        }
+
         Map<String, Object> result = orderService.placeOrder(
             userId, items, subtotal, discountCode, discountAmt,
             paymentMethod, address, deliveryType
@@ -111,6 +121,47 @@ public class OrderHandler extends BaseHandler {
         } else {
             sendBadRequest(exchange, (String) result.get("message"));
         }
+    }
+
+    private boolean validateCreditCard(String cardNumber, String expiryDate, String cvv) {
+        if (cardNumber == null || expiryDate == null || cvv == null) {
+            return false;
+        }
+
+        // Luhn algorithm check
+        String cleanNum = cardNumber.replaceAll("\\s+", "");
+        if (!cleanNum.matches("^\\d{13,19}$")) {
+            return false;
+        }
+
+        int sum = 0;
+        boolean shouldDouble = false;
+        for (int i = cleanNum.length() - 1; i >= 0; i--) {
+            int digit = Character.getNumericValue(cleanNum.charAt(i));
+            if (shouldDouble) {
+                digit *= 2;
+                if (digit > 9) {
+                    digit -= 9;
+                }
+            }
+            sum += digit;
+            shouldDouble = !shouldDouble;
+        }
+        if (sum % 10 != 0) {
+            return false;
+        }
+
+        // Expiry Date check (MM/YY or MM/YYYY)
+        if (!expiryDate.matches("^(0[1-9]|1[0-2])/(\\d{2}|\\d{4})$")) {
+            return false;
+        }
+
+        // CVV check (strictly 3 digit integer)
+        if (!cvv.matches("^\\d{3}$")) {
+            return false;
+        }
+
+        return true;
     }
 
     // ── GET /api/orders/{userId} ───────────────────────────────────────────────
