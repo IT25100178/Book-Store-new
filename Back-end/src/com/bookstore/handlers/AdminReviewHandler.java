@@ -39,7 +39,7 @@ public class AdminReviewHandler extends BaseHandler {
                 return;
             }
 
-            // Sub paths: /{id}/approve or /{id}
+            // Sub paths: /{id}/approve, /{id}/reply, /{id}/complain or /{id}
             String[] parts = sub.split("/");
             // parts[0]="" parts[1]=reviewId parts[2]=action
             if (parts.length < 2) {
@@ -52,6 +52,10 @@ public class AdminReviewHandler extends BaseHandler {
 
             if ("approve".equals(action) && "PUT".equals(method)) {
                 handleApproveReview(exchange, reviewId);
+            } else if ("reply".equals(action) && ("POST".equals(method) || "PUT".equals(method))) {
+                handleReplyReview(exchange, reviewId);
+            } else if ("complain".equals(action) && "POST".equals(method)) {
+                handleComplainReview(exchange, reviewId);
             } else if (action.isEmpty() && "DELETE".equals(method)) {
                 handleDeleteReview(exchange, reviewId);
             } else {
@@ -61,6 +65,99 @@ public class AdminReviewHandler extends BaseHandler {
         } catch (Exception e) {
             sendError(exchange, 500, "Internal error: " + e.getMessage());
         }
+    }
+
+    private void handleReplyReview(HttpExchange exchange, String reviewId) throws IOException {
+        String body = readBody(exchange);
+        Map<String, String> data = FileStorage.parseJsonBody(body);
+
+        String replyText = data.get("reply");
+        if (replyText == null) {
+            replyText = data.get("adminReply");
+        }
+
+        if (replyText == null || replyText.trim().isEmpty()) {
+            sendBadRequest(exchange, "Reply message cannot be empty");
+            return;
+        }
+
+        // Retrieve adminId from request
+        String adminId = exchange.getRequestHeaders().getFirst("X-Admin-Id");
+        if (adminId == null || adminId.isEmpty()) {
+            adminId = exchange.getRequestHeaders().getFirst("Authorization");
+        }
+        if (adminId == null || adminId.isEmpty()) {
+            String query = exchange.getRequestURI().getQuery();
+            Map<String, String> queryMap = parseQuery(query);
+            adminId = queryMap.get("adminId");
+        }
+        if (adminId == null || adminId.isEmpty()) {
+            adminId = data.get("adminId");
+        }
+
+        if (adminId == null || adminId.isEmpty()) {
+            sendError(exchange, 401, "Unauthorized. Admin ID is required.");
+            return;
+        }
+
+        if (!isAdminUser(adminId)) {
+            sendError(exchange, 403, "Forbidden. Active admin role required.");
+            return;
+        }
+
+        Map<String, Object> result = userService.replyToReview(reviewId, adminId, replyText);
+        if (Boolean.TRUE.equals(result.get("success"))) {
+            Review updatedReview = (Review) result.get("review");
+            if (updatedReview != null) {
+                sendSuccess(exchange, updatedReview.toJson());
+            } else {
+                sendSuccess(exchange, "{\"success\":true}");
+            }
+        } else {
+            sendBadRequest(exchange, (String) result.get("message"));
+        }
+    }
+
+    private void handleComplainReview(HttpExchange exchange, String reviewId) throws IOException {
+        String body = readBody(exchange);
+        Map<String, String> data = FileStorage.parseJsonBody(body);
+        String adminId = data.get("adminId");
+        String reason = data.get("reason");
+
+        if (adminId == null || adminId.isEmpty()) {
+            String query = exchange.getRequestURI().getQuery();
+            Map<String, String> queryMap = parseQuery(query);
+            adminId = queryMap.get("adminId");
+        }
+        if (adminId == null || adminId.isEmpty()) {
+            adminId = exchange.getRequestHeaders().getFirst("X-Admin-Id");
+        }
+        if (adminId == null || adminId.isEmpty()) {
+            adminId = exchange.getRequestHeaders().getFirst("Authorization");
+        }
+
+        if (adminId == null || reason == null || reason.trim().isEmpty()) {
+            sendBadRequest(exchange, "adminId and reason are required");
+            return;
+        }
+
+        if (!isAdminUser(adminId)) {
+            sendError(exchange, 403, "Forbidden. Admin role required.");
+            return;
+        }
+
+        Map<String, Object> result = userService.flagReview(reviewId, reason);
+        if (Boolean.TRUE.equals(result.get("success"))) {
+            sendSuccess(exchange, "{\"success\":true,\"message\":\"Review flagged as violent/inappropriate\"}");
+        } else {
+            sendBadRequest(exchange, (String) result.get("message"));
+        }
+    }
+
+    private boolean isAdminUser(String adminId) {
+        if (adminId == null) return false;
+        com.bookstore.models.User user = userService.findById(adminId);
+        return user != null && "ADMIN".equals(user.getRole()) && !user.isBlocked();
     }
 
     private void handleListReviews(HttpExchange exchange) throws IOException {

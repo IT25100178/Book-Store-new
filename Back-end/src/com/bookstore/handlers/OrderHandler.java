@@ -86,6 +86,7 @@ public class OrderHandler extends BaseHandler {
         String cardNumber    = data.get("cardNumber");
         String expiryDate    = data.get("expiryDate");
         String cvv           = data.get("cvv");
+        String cardHolderName = data.get("cardHolderName");
         String cardNickname  = data.get("cardNickname");
         boolean saveCard     = Boolean.parseBoolean(data.getOrDefault("saveCard", "false"));
         boolean isDefault    = Boolean.parseBoolean(data.getOrDefault("isDefault", "false"));
@@ -94,7 +95,7 @@ public class OrderHandler extends BaseHandler {
         if ("ONLINE".equals(paymentMethod)) {
             if (selectedCardId == null || selectedCardId.isBlank()) {
                 if (!validateCreditCard(cardNumber, expiryDate, cvv)) {
-                    sendBadRequest(exchange, "Invalid credit card details. Card must pass Luhn validation, Expiry must contain / and match MM/YY or MM/YYYY, and CVV must be exactly 3 digits.");
+                    sendBadRequest(exchange, "Invalid credit card details. Card number must be 16 digits, pass Luhn validation, expiry must contain / and match MM/YY or MM/YYYY, and CVV must be exactly 3 digits.");
                     return;
                 }
             } else {
@@ -107,7 +108,7 @@ public class OrderHandler extends BaseHandler {
         }
 
         if (saveCard && "ONLINE".equals(paymentMethod)) {
-            Map<String, Object> cardResult = paymentCardService.saveCard(userId, cardNumber, expiryDate, cardNickname, isDefault);
+            Map<String, Object> cardResult = paymentCardService.saveCard(userId, cardNumber, expiryDate, cardHolderName, cardNickname, isDefault, cvv);
             if (!Boolean.TRUE.equals(cardResult.get("success"))) {
                 sendBadRequest(exchange, (String) cardResult.get("message"));
                 return;
@@ -154,7 +155,7 @@ public class OrderHandler extends BaseHandler {
 
         // Luhn algorithm check
         String cleanNum = cardNumber.replaceAll("\\s+", "");
-        if (!cleanNum.matches("^\\d{13,19}$")) {
+        if (!cleanNum.matches("^\\d{16}$")) {
             return false;
         }
 

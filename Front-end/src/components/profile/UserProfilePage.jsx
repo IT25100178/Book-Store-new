@@ -76,6 +76,13 @@ export default function UserProfilePage() {
               <div className="sidebar-email" style={{ fontSize: '0.85rem', color: 'rgba(240,230,211,0.6)', marginBottom: '12px' }}>
                 {user?.email || ''}
               </div>
+              <div className="sidebar-avatar" style={{ margin: '0 auto 18px' }}>
+                {user?.avatar ? (
+                  <img src={user.avatar} alt="Profile" />
+                ) : (
+                  (user?.name?.charAt(0)?.toUpperCase() || 'U')
+                )}
+              </div>
               {user?.role === 'ADMIN' && (
                 <div style={{ marginTop:'0.5rem' }}>
                   <Link to="/admin" style={{

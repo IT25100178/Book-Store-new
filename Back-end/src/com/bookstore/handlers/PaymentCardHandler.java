@@ -28,21 +28,25 @@ public class PaymentCardHandler extends BaseHandler {
 
         String path = exchange.getRequestURI().getPath();
         String method = exchange.getRequestMethod().toUpperCase();
-        String sub = path.replaceFirst("^/api/(cards|payment/cards)", ""); // "/{userId}" or "/{id}"
 
         try {
-            if ("POST".equals(method) && (sub.isEmpty() || "/".equals(sub))) {
+            if ("POST".equals(method) && path.matches("^/api/(cards|payment/cards|payment-cards)/?$")) {
                 handleSaveCard(exchange);
-            } else if (sub.matches("/[^/]+") && "GET".equals(method)) {
-                String userId = sub.substring(1);
+
+            } else if ("GET".equals(method) && path.matches("^/api/(cards|payment/cards|payment-cards)/user/[^/]+$")) {
+                String userId = path.substring(path.lastIndexOf('/') + 1);
                 handleGetCards(exchange, userId);
 
-            } else if (sub.matches("/[^/]+") && "PUT".equals(method)) {
-                String cardId = sub.substring(1);
+            } else if ("GET".equals(method) && path.matches("^/api/(cards|payment/cards|payment-cards)/[^/]+$")) {
+                String userId = path.substring(path.lastIndexOf('/') + 1);
+                handleGetCards(exchange, userId);
+
+            } else if ("PUT".equals(method) && path.matches("^/api/(cards|payment/cards|payment-cards)/[^/]+$")) {
+                String cardId = path.substring(path.lastIndexOf('/') + 1);
                 handleUpdateCard(exchange, cardId);
 
-            } else if (sub.matches("/[^/]+") && "DELETE".equals(method)) {
-                String cardId = sub.substring(1);
+            } else if ("DELETE".equals(method) && path.matches("^/api/(cards|payment/cards|payment-cards)/[^/]+$")) {
+                String cardId = path.substring(path.lastIndexOf('/') + 1);
                 handleDeleteCard(exchange, cardId);
 
             } else {
@@ -58,15 +62,17 @@ public class PaymentCardHandler extends BaseHandler {
         String userId = data.get("userId");
         String cardNumber = data.get("cardNumber");
         String expiryDate = data.get("expiryDate");
+        String cardHolderName = data.get("cardHolderName");
         String cardNickname = data.get("cardNickname");
         boolean isDefault = Boolean.parseBoolean(data.getOrDefault("isDefault", "false"));
+        String cvv = data.get("cvv");
 
-        if (userId == null || cardNumber == null || expiryDate == null) {
-            sendBadRequest(exchange, "userId, cardNumber, and expiryDate are required");
+        if (userId == null || cardNumber == null || expiryDate == null || cardHolderName == null) {
+            sendBadRequest(exchange, "userId, cardNumber, cardHolderName, and expiryDate are required");
             return;
         }
 
-        Map<String, Object> result = cardService.saveCard(userId, cardNumber, expiryDate, cardNickname, isDefault);
+        Map<String, Object> result = cardService.saveCard(userId, cardNumber, expiryDate, cardHolderName, cardNickname, isDefault, cvv);
         if (Boolean.TRUE.equals(result.get("success"))) {
             sendCreated(exchange, "{\"success\":true,\"message\":\"" + result.get("message") + "\",\"card\":" + result.get("card") + "}");
         } else {
@@ -84,15 +90,18 @@ public class PaymentCardHandler extends BaseHandler {
         Map<String, String> data = FileStorage.parseJsonBody(readBody(exchange));
         String userId = data.get("userId");
         String newExpiry = data.get("expiryDate");
+        String cardNumber = data.get("cardNumber");
+        String cardHolderName = data.get("cardHolderName");
         String cardNickname = data.get("cardNickname");
         boolean isDefault = Boolean.parseBoolean(data.getOrDefault("isDefault", "false"));
+        String cvv = data.get("cvv");
 
-        if (userId == null || newExpiry == null) {
-            sendBadRequest(exchange, "userId and expiryDate are required");
+        if (userId == null) {
+            sendBadRequest(exchange, "userId is required");
             return;
         }
 
-        Map<String, Object> result = cardService.updateCard(cardId, userId, newExpiry, cardNickname, isDefault);
+        Map<String, Object> result = cardService.updateCard(cardId, userId, cardNumber, cardHolderName, newExpiry, cardNickname, isDefault, cvv);
         if (Boolean.TRUE.equals(result.get("success"))) {
             sendSuccess(exchange, "{\"success\":true,\"message\":\"" + result.get("message") + "\"}");
         } else {

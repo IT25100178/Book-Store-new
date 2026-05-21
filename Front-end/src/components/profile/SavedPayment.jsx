@@ -14,6 +14,7 @@ export default function SavedPayment() {
   const [cardNumber, setCardNumber] = useState('');
   const [expiryDate, setExpiryDate] = useState('');
   const [cardHolder, setCardHolder] = useState('');
+  const [cvv, setCvv] = useState('');
   const [brand, setBrand] = useState('Visa');
 
   // Editing state
@@ -48,18 +49,19 @@ export default function SavedPayment() {
     setError('');
     setSuccess('');
 
-    if (!cardNumber || !expiryDate || !cardHolder) {
+    if (!cardNumber || !expiryDate || !cardHolder || !cvv) {
       setError('All fields are required.');
       return;
     }
 
     try {
-      const res = await cardsApi.save(user.id, cardNumber, expiryDate);
+      const res = await cardsApi.save(user.id, cardNumber, expiryDate, cardHolder, '', false, cvv);
       if (res.ok) {
         setSuccess('Card saved successfully!');
         setCardNumber('');
         setExpiryDate('');
         setCardHolder('');
+        setCvv('');
         setBrand('Visa');
         loadCards();
       } else {
@@ -89,7 +91,7 @@ export default function SavedPayment() {
     }
 
     try {
-      const res = await cardsApi.update(cardId, editExpiry);
+      const res = await cardsApi.update(cardId, { userId: user.id, expiryDate: editExpiry });
       if (res.ok) {
         setSuccess('Expiry date updated successfully!');
         setEditingCardId(null);
@@ -108,7 +110,7 @@ export default function SavedPayment() {
     setError('');
     setSuccess('');
     try {
-      const res = await cardsApi.delete(cardId);
+      const res = await cardsApi.delete(cardId, { userId: user.id });
       if (res.ok) {
         setSuccess('Card deleted successfully!');
         loadCards();
@@ -354,6 +356,18 @@ export default function SavedPayment() {
                 maxLength="5"
               />
             </div>
+          </div>
+
+          <div style={{ marginTop: '16px' }}>
+            <label className="profile-label">CVV</label>
+            <input
+              className="profile-input"
+              type="password"
+              maxLength="3"
+              placeholder="123"
+              value={cvv}
+              onChange={(e) => setCvv(e.target.value.replace(/\D/g, ''))}
+            />
           </div>
 
           <button className="profile-btn-primary" type="submit" style={{ marginTop: '8px' }}>

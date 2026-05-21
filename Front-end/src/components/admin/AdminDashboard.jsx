@@ -1,5 +1,5 @@
 // src/components/admin/AdminDashboard.jsx
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   admin as adminApi,
@@ -9,6 +9,7 @@ import {
   articles as articlesApi,
 } from "../../services/api";
 import { useAuth } from "../../context/AuthContext";
+import { useTheme } from "../../context/ThemeContext";
 import logoImg from "../../assets/Luxury books logo.png";
 import "./AdminDashboard.css";
 
@@ -34,7 +35,7 @@ const STATUS_COLORS = {
 };
 
 export default function AdminDashboard() {
-  const { user, logout } = useAuth();
+  const { user, logout, updateLocalUser } = useAuth();
   const navigate = useNavigate();
 
   const [activeSection, setActiveSection] = useState("dashboard");
@@ -53,10 +54,23 @@ export default function AdminDashboard() {
   const [articleForm, setArticleForm] = useState(null);
   const [toast, setToast] = useState("");
 
+  // Review Reply State
+  const [replyModal, setReplyModal] = useState(null); // null or { reviewId, existingReply }
+  const [replyText, setReplyText] = useState("");
+  const [replySaving, setReplySaving] = useState(false);
+  const [replyError, setReplyError] = useState("");
+
   // UI State
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [isDarkMode, setIsDarkMode] = useState(true);
+  const { theme, toggleTheme } = useTheme();
+  const isDarkMode = theme === "dark";
   const [globalSearch, setGlobalSearch] = useState("");
+  const adminFileRef = useRef();
+  const [adminPreview, setAdminPreview] = useState(user?.avatar || '');
+  const [adminSelectedFile, setAdminSelectedFile] = useState(null);
+  const [adminImageLoading, setAdminImageLoading] = useState(false);
+  const [adminImageError, setAdminImageError] = useState('');
+  const [adminImageSuccess, setAdminImageSuccess] = useState('');
 
   // Sorting & Filtering State
   const [orderSort, setOrderSort] = useState("newest"); // newest, oldest, amount-high, amount-low
@@ -64,6 +78,10 @@ export default function AdminDashboard() {
   useEffect(() => {
     loadSection(activeSection);
   }, [activeSection]);
+
+  useEffect(() => {
+    setAdminPreview(user?.avatar || '');
+  }, [user?.avatar]);
 
   const loadSection = async (section) => {
     setLoading(true);
@@ -181,17 +199,29 @@ export default function AdminDashboard() {
   };
 
   const handleReplyReview = async (reviewId, replyText) => {
-    if (!replyText || !replyText.trim()) return;
+    if (!replyText || !replyText.trim()) {
+      setReplyError("Reply message cannot be empty");
+      return;
+    }
+    setReplySaving(true);
+    setReplyError("");
     try {
       const { ok, data } = await adminApi.replyToReview(reviewId, user.id, replyText);
       if (ok) {
         showToast("Reply submitted successfully!");
-        loadSection("reviews");
+        setReviews((prevReviews) =>
+          prevReviews.map((r) => (r.id === reviewId ? data : r))
+        );
+        setReplyModal(null);
       } else {
+        setReplyError(data?.message || "Failed to submit reply");
         showToast(data?.message || "Failed to submit reply", "error");
       }
     } catch (_) {
+      setReplyError("Error submitting reply");
       showToast("Error submitting reply", "error");
+    } finally {
+      setReplySaving(false);
     }
   };
 
@@ -224,6 +254,74 @@ export default function AdminDashboard() {
       }
     } catch (_) {
       showToast(`Error performing user moderation`, "error");
+    }
+  };
+
+  const validateAdminFile = (file) => {
+    if (!file) return 'Please choose an image file.';
+    const allowed = ['image/png', 'image/jpeg', 'image/jpg'];
+    if (!allowed.includes(file.type)) return 'Only JPG, JPEG, or PNG images are allowed.';
+    if (file.size > 2 * 1024 * 1024) return 'Image must be under 2 MB.';
+    return null;
+  };
+
+  const handleAdminFileChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const validation = validateAdminFile(file);
+    if (validation) {
+      setAdminImageError(validation);
+      return;
+    }
+    setAdminImageError('');
+    setAdminSelectedFile(file);
+    const reader = new FileReader();
+    reader.onloadend = () => setAdminPreview(reader.result);
+    reader.readAsDataURL(file);
+  };
+
+  const handleAdminUpload = async () => {
+    if (!adminSelectedFile) {
+      setAdminImageError('Please choose an image first.');
+      return;
+    }
+    setAdminImageLoading(true);
+    setAdminImageError('');
+    try {
+      const result = await adminApi.updateProfileImage(user.id, adminSelectedFile.name, adminPreview);
+      if (result.ok) {
+        updateLocalUser({ avatar: result.data?.avatar });
+        setAdminImageSuccess('Admin profile image updated successfully!');
+        setAdminSelectedFile(null);
+      } else {
+        setAdminImageError(result.data?.message || 'Failed to upload admin profile image.');
+      }
+    } catch (_) {
+      setAdminImageError('Unable to upload admin image. Please try again.');
+    } finally {
+      setAdminImageLoading(false);
+      setTimeout(() => setAdminImageSuccess(''), 3000);
+    }
+  };
+
+  const handleAdminRemove = async () => {
+    setAdminImageLoading(true);
+    setAdminImageError('');
+    try {
+      const result = await adminApi.removeProfileImage(user.id);
+      if (result.ok) {
+        updateLocalUser({ avatar: '' });
+        setAdminPreview('');
+        setAdminSelectedFile(null);
+        setAdminImageSuccess('Admin profile image removed.');
+      } else {
+        setAdminImageError(result.data?.message || 'Failed to remove admin profile image.');
+      }
+    } catch (_) {
+      setAdminImageError('Unable to remove admin image. Please try again.');
+    } finally {
+      setAdminImageLoading(false);
+      setTimeout(() => setAdminImageSuccess(''), 3000);
     }
   };
 
@@ -1601,35 +1699,35 @@ export default function AdminDashboard() {
                     </div>
                   )}
                   {r.adminReply ? (
-                    <div style={{
-                      marginTop: '6px',
-                      paddingLeft: '12px',
-                      borderLeft: '2px solid #D4AF37',
-                      color: '#D4AF37',
-                      fontStyle: 'italic',
-                      fontSize: '0.8rem'
-                    }}>
-                      ↳ Admin Reply: {r.adminReply}
+                    <div style={{ marginTop: '8px' }}>
+                      <div className="admin-reply-box">
+                        <span className="reply-arrow">↳</span>
+                        <span className="reply-label">Admin Reply:</span>
+                        <p className="reply-text-content">{r.adminReply}</p>
+                      </div>
+                      <button
+                        onClick={() => {
+                          setReplyModal({ reviewId: r.id, existingReply: r.adminReply });
+                          setReplyText(r.adminReply);
+                          setReplyError("");
+                        }}
+                        className="review-reply-btn edit"
+                      >
+                        ✏️ Edit Reply
+                      </button>
                     </div>
                   ) : (
                     r.approved && (
                       <div style={{ marginTop: '8px' }}>
                         <button
                           onClick={() => {
-                            const reply = window.prompt("Enter admin reply text:");
-                            if (reply) handleReplyReview(r.id, reply);
+                            setReplyModal({ reviewId: r.id, existingReply: "" });
+                            setReplyText("");
+                            setReplyError("");
                           }}
-                          style={{
-                            background: 'rgba(212,175,55,0.15)',
-                            color: '#D4AF37',
-                            border: '1px solid rgba(212,175,55,0.3)',
-                            borderRadius: '4px',
-                            padding: '2px 8px',
-                            fontSize: '0.75rem',
-                            cursor: 'pointer'
-                          }}
+                          className="review-reply-btn"
                         >
-                          Reply
+                          💬 Reply
                         </button>
                       </div>
                     )
@@ -1665,39 +1763,30 @@ export default function AdminDashboard() {
                   )}
                 </td>
                 <td>
-                  <div className="action-btns" style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                  <div className="review-actions-cell">
                     {!r.approved && (
                       <button
-                        className="icon-btn edit"
                         onClick={() => handleApproveReview(r.id)}
-                        title="Approve"
-                        style={{ fontSize: "1rem", color: "#34d399" }}
+                        className="review-action-btn approve"
+                        title="Approve Review"
                       >
-                        ✓
+                        ✓ Approve
                       </button>
                     )}
                     <button
-                      className="icon-btn delete"
                       onClick={() => handleDeleteReview(r.id)}
-                      title="Delete"
+                      className="review-action-btn delete"
+                      title="Delete Review"
                     >
-                      ⊗
+                      ⊗ Delete
                     </button>
                     {!r.isFlagged && (
                       <button
                         onClick={() => handleComplainReview(r.id)}
-                        title="Flag/Complain"
-                        style={{
-                          background: 'rgba(239, 68, 68, 0.15)',
-                          border: '1px solid rgba(239, 68, 68, 0.3)',
-                          color: '#f87171',
-                          borderRadius: '4px',
-                          padding: '2px 6px',
-                          fontSize: '0.75rem',
-                          cursor: 'pointer'
-                        }}
+                        className="review-action-btn flag"
+                        title="Flag Review"
                       >
-                        Flag
+                        ⚑ Flag
                       </button>
                     )}
                   </div>
@@ -1759,13 +1848,59 @@ export default function AdminDashboard() {
 
         <div className="sidebar-admin-badge">
           <div className="admin-av">
-            {user?.name?.charAt(0)?.toUpperCase() || "A"}
+            {adminPreview ? (
+              <img src={adminPreview} alt="Admin profile" />
+            ) : (
+              user?.name?.charAt(0)?.toUpperCase() || "A"
+            )}
+            <div className="admin-av-overlay">Upload manually</div>
           </div>
           <div className="admin-info">
             <p className="admin-name">{user?.name || "Admin"}</p>
             <p className="admin-role">Super Admin</p>
           </div>
         </div>
+        <input
+          type="file"
+          ref={adminFileRef}
+          accept="image/png,image/jpeg,image/jpg"
+          style={{ display: 'none' }}
+          onChange={handleAdminFileChange}
+        />
+        <div className="admin-image-actions">
+          <button
+            className="admin-image-btn"
+            type="button"
+            onClick={() => adminFileRef.current?.click()}
+          >
+            {adminSelectedFile ? 'Choose Another' : 'Choose Image'}
+          </button>
+          {adminSelectedFile && (
+            <button
+              type="button"
+              className="admin-image-btn upload"
+              onClick={handleAdminUpload}
+              disabled={adminImageLoading}
+            >
+              {adminImageLoading ? 'Uploading…' : 'Upload manually'}
+            </button>
+          )}
+          {user?.avatar && !adminSelectedFile && (
+            <button
+              type="button"
+              className="admin-image-btn remove"
+              onClick={handleAdminRemove}
+              disabled={adminImageLoading}
+            >
+              Remove
+            </button>
+          )}
+        </div>
+        <p className="admin-image-text" style={{ color: 'rgba(212,175,55,0.75)', fontSize: '0.75rem', margin: '0 0 0.75rem 0' }}>
+          Upload your admin profile photo manually from this panel.
+        </p>
+        {adminImageError && <p className="admin-image-text error">{adminImageError}</p>}
+        {adminImageSuccess && <p className="admin-image-text success">{adminImageSuccess}</p>}
 
         <nav className="admin-nav">
           <div className="nav-group">
@@ -1880,14 +2015,18 @@ export default function AdminDashboard() {
 
             <button
               className="theme-toggle-btn"
-              onClick={() => setIsDarkMode(!isDarkMode)}
+              onClick={toggleTheme}
             >
               {isDarkMode ? "☀️" : "🌙"}
             </button>
 
             <div className="topbar-user">
-              <div className="topbar-av">
-                {user?.name?.charAt(0)?.toUpperCase()}
+              <div className="topbar-av" title={user?.name || 'Admin'}>
+                {user?.avatar ? (
+                  <img src={user.avatar} alt="Admin profile" />
+                ) : (
+                  user?.name?.charAt(0)?.toUpperCase() || 'A'
+                )}
               </div>
             </div>
           </div>
@@ -1905,6 +2044,67 @@ export default function AdminDashboard() {
           )}
         </div>
       </main>
+      {/* Custom Admin Reply Modal */}
+      {replyModal && (
+        <div className="modal-overlay" style={{ display: 'flex' }}>
+          <div className="modal-card" style={{ maxWidth: '500px' }}>
+            <div className="modal-header">
+              <h3>{replyModal.existingReply ? "Edit Admin Reply" : "Reply to Review"}</h3>
+              <button className="modal-close-btn" onClick={() => setReplyModal(null)}>×</button>
+            </div>
+            <div className="modal-body" style={{ padding: '1.5rem' }}>
+              <div className="modal-field" style={{ marginBottom: '1.25rem' }}>
+                <label className="modal-label" style={{ marginBottom: '0.5rem' }}>Your Reply Message</label>
+                <textarea
+                  value={replyText}
+                  onChange={(e) => setReplyText(e.target.value)}
+                  placeholder="Type your reply here..."
+                  rows={4}
+                  className="modal-input"
+                  style={{ width: '100%', resize: 'vertical', minHeight: '100px' }}
+                  disabled={replySaving}
+                />
+              </div>
+              {replyError && (
+                <div style={{
+                  color: '#f87171',
+                  background: 'rgba(248, 113, 113, 0.1)',
+                  border: '1px solid rgba(248, 113, 113, 0.2)',
+                  borderRadius: '8px',
+                  padding: '10px 14px',
+                  fontSize: '0.85rem',
+                  marginBottom: '1rem'
+                }}>
+                  ⚠️ {replyError}
+                </div>
+              )}
+            </div>
+            <div className="modal-footer">
+              <button
+                type="button"
+                className="modal-cancel-btn"
+                onClick={() => setReplyModal(null)}
+                disabled={replySaving}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="modal-save-btn"
+                onClick={() => handleReplyReview(replyModal.reviewId, replyText)}
+                disabled={replySaving}
+                style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
+              >
+                {replySaving ? (
+                  <>
+                    <span className="loading-spinner-sm" /> Saving...
+                  </>
+                ) : "Save Reply"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ── Toast ────────────────────────────────────────────────────────── */}
       {toast && (

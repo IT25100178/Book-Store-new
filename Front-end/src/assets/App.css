@@ -32,16 +32,26 @@
 }
 
 [data-theme="light"] {
-  --bg-primary: #f8f9fa;
+  --bg-primary: #f9f6f0;       /* upscale literary cream off-white */
   --bg-secondary: #ffffff;
-  --glass-bg: rgba(0, 0, 0, 0.02);
-  --glass-bg-hover: rgba(0, 0, 0, 0.05);
-  --glass-border: rgba(0, 0, 0, 0.08);
-  --glass-border-hover: rgba(122, 0, 22, 0.3);
-  --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.05);
-  --text-primary: #111111;
-  --text-secondary: #555555;
-  --text-muted: #888888;
+  --glass-bg: rgba(0, 0, 0, 0.03);
+  --glass-bg-hover: rgba(0, 0, 0, 0.06);
+  --glass-border: rgba(122, 0, 22, 0.15);
+  --glass-border-hover: rgba(122, 0, 22, 0.4);
+  --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.06);
+  --text-primary: #1a1a1a;
+  --text-secondary: #4a4a4a;
+  --text-muted: #7c7c7c;
+  --gold: #b38f43;             /* premium readability in light mode */
+  --gold-light: #dfb163;
+}
+
+/* Global Theme Transitions */
+body, main, header, footer, aside, section, div.glass-card, div.book-card, table, tr, td, th, input, select, textarea, button, a {
+  transition: background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1), 
+              color 0.3s cubic-bezier(0.4, 0, 0.2, 1), 
+              border-color 0.3s cubic-bezier(0.4, 0, 0.2, 1), 
+              box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }

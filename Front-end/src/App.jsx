@@ -2,6 +2,7 @@
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AuthProvider }  from './context/AuthContext';
 import { CartProvider }  from './context/CartContext';
+import { ThemeProvider }  from './context/ThemeContext';
 import '../src/assets/App.css';
 
 import Navbar from './components/shared/Navbar';
@@ -101,14 +102,16 @@ export default function App() {
     <Router>
       <AuthProvider>
         <CartProvider>
-          <CustomCursor />
-          <div className="App">
-            <Navbar />
-            <main className="main-content">
-              <AnimatedRoutes />
-            </main>
-            <Footer />
-          </div>
+          <ThemeProvider>
+            <CustomCursor />
+            <div className="App">
+              <Navbar />
+              <main className="main-content">
+                <AnimatedRoutes />
+              </main>
+              <Footer />
+            </div>
+          </ThemeProvider>
         </CartProvider>
       </AuthProvider>
     </Router>

@@ -51,6 +51,34 @@ public class AuthService {
      */
     public Map<String, Object> register(String name, String email,
                                         String password, String phone) {
+        // Fallback for legacy calls (like seeders)
+        String countryCode = "";
+        String contactNumber = "";
+        if (phone != null && !phone.isEmpty()) {
+            if (phone.startsWith("+94")) {
+                countryCode = "+94";
+                contactNumber = phone.substring(3);
+            } else if (phone.startsWith("+91")) {
+                countryCode = "+91";
+                contactNumber = phone.substring(3);
+            } else if (phone.startsWith("+65")) {
+                countryCode = "+65";
+                contactNumber = phone.substring(3);
+            } else if (phone.startsWith("+44")) {
+                countryCode = "+44";
+                contactNumber = phone.substring(3);
+            } else if (phone.startsWith("+1")) {
+                countryCode = "+1";
+                contactNumber = phone.substring(2);
+            } else {
+                contactNumber = phone;
+            }
+        }
+        return register(name, email, password, countryCode, contactNumber);
+    }
+
+    public Map<String, Object> register(String name, String email,
+                                        String password, String countryCode, String contactNumber) {
         Map<String, Object> result = new LinkedHashMap<>();
 
         // ── Validation ───────────────────────────────────────────────────────
@@ -77,15 +105,58 @@ public class AuthService {
             return result;
         }
 
+        // Phone Validation (required for new registrations)
+        if (countryCode == null || countryCode.trim().isEmpty()) {
+            result.put("success", false);
+            result.put("message", "Country code is required");
+            return result;
+        }
+        if (contactNumber == null || contactNumber.trim().isEmpty()) {
+            result.put("success", false);
+            result.put("message", "Contact number is required");
+            return result;
+        }
+
+        // Trim input values
+        String cleanCountry = countryCode.trim();
+        String cleanNumber = contactNumber.trim();
+
+        // 1. Accept only digits. Reject if there are symbols, spaces, letters
+        if (!cleanNumber.matches("^\\d+$")) {
+            result.put("success", false);
+            result.put("message", "Contact number must contain only digits.");
+            return result;
+        }
+
+        // 2. Validate phone number based on selected country
+        int expectedLength = -1;
+        if ("+94".equals(cleanCountry)) {
+            expectedLength = 9; // Sri Lanka
+        } else if ("+91".equals(cleanCountry)) {
+            expectedLength = 10; // India
+        } else if ("+65".equals(cleanCountry)) {
+            expectedLength = 8; // Singapore
+        } else if ("+44".equals(cleanCountry)) {
+            expectedLength = 10; // UK
+        } else if ("+1".equals(cleanCountry)) {
+            expectedLength = 10; // US
+        }
+
+        if (expectedLength != -1 && cleanNumber.length() != expectedLength) {
+            result.put("success", false);
+            result.put("message", "Invalid phone number for selected country.");
+            return result;
+        }
+
         // ── Create user ───────────────────────────────────────────────────────
         String id      = "USR" + System.currentTimeMillis();
         String avatar  = "https://ui-avatars.com/api/?background=D4AF37&color=fff&name=" +
                          name.replace(" ", "+");
         String joined  = LocalDate.now().toString();
-        String safePhone = (phone == null) ? "" : phone;
+        String fullPhone = cleanCountry + cleanNumber;
 
         User user = new User(id, name.trim(), email.toLowerCase().trim(),
-                             password, safePhone, "", "USER", avatar, joined);
+                             password, fullPhone, "", "USER", avatar, joined);
 
         FileStorage.appendLine(FILE, user.toFileLine());
 

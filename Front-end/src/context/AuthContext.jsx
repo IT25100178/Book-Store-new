@@ -50,10 +50,37 @@ export function AuthProvider({ children }) {
 
   // ── Register – calls Java /api/auth/register ──────────────────────────────
 
-  const register = async (name, email, password, phone = '') => {
+  const register = async (name, email, password, countryCode, contactNumber = '') => {
     setError(null);
     try {
-      const { ok, data } = await authApi.register(name, email, password, phone);
+      // Support legacy signature if only phone is provided
+      let finalCountry = countryCode;
+      let finalNumber = contactNumber;
+      if (!contactNumber && countryCode && countryCode.includes('+')) {
+        // If called as register(name, email, password, phone)
+        const phone = countryCode;
+        if (phone.startsWith("+94")) {
+          finalCountry = "+94";
+          finalNumber = phone.substring(3);
+        } else if (phone.startsWith("+91")) {
+          finalCountry = "+91";
+          finalNumber = phone.substring(3);
+        } else if (phone.startsWith("+65")) {
+          finalCountry = "+65";
+          finalNumber = phone.substring(3);
+        } else if (phone.startsWith("+44")) {
+          finalCountry = "+44";
+          finalNumber = phone.substring(3);
+        } else if (phone.startsWith("+1")) {
+          finalCountry = "+1";
+          finalNumber = phone.substring(2);
+        } else {
+          finalCountry = "+94";
+          finalNumber = phone;
+        }
+      }
+
+      const { ok, data } = await authApi.register(name, email, password, finalCountry, finalNumber);
       if (ok && data.success) {
         // Parse user from JSON string returned by Java
         const userData = typeof data.user === 'string' ? JSON.parse(data.user) : data.user;

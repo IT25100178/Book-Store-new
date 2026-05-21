@@ -236,3 +236,30 @@
 @keyframes slideUp { from{ opacity:0; transform:translateY(20px) } to{ opacity:1; transform:none } }
 
 @media (max-width:480px) { .login-card { padding:26px 20px; } .animated-books,.particle-network { display:none; } }
+
+/* ── Light Mode Support ── */
+[data-theme="light"] .login-form-section {
+  background: var(--bg-primary);
+}
+[data-theme="light"] .login-header p {
+  color: var(--text-secondary);
+}
+[data-theme="light"] .input-field {
+  background: #ffffff;
+  color: #1a1a1a;
+  border-color: rgba(179, 143, 67, 0.25);
+}
+[data-theme="light"] .input-field:focus {
+  background: #ffffff;
+  border-color: #b38f43;
+}
+[data-theme="light"] .input-field::placeholder {
+  color: #7c7c7c;
+}
+[data-theme="light"] .checkbox-label {
+  color: #4a4a4a;
+}
+[data-theme="light"] .signup-prompt {
+  color: #4a4a4a;
+  border-top-color: rgba(179, 143, 67, 0.15);
+}

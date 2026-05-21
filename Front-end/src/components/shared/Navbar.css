@@ -308,3 +308,47 @@
     display: block;
   }
 }
+
+/* Theme Toggle Button */
+.theme-toggle-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  padding: 0.5rem;
+  border-radius: 50%;
+}
+.theme-toggle-btn:hover {
+  transform: rotate(20deg) scale(1.1);
+  color: var(--gold);
+  background: var(--glass-bg-hover);
+}
+
+/* Navbar Light Mode Overrides */
+[data-theme="light"] .premium-navbar::after {
+  background: linear-gradient(180deg, rgba(249, 246, 240, 0), rgba(249, 246, 240, 0.95));
+}
+[data-theme="light"] .premium-navbar.scrolled {
+  background: rgba(249, 246, 240, 0.75);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+[data-theme="light"] .user-dropdown-menu {
+  background: rgba(255, 255, 255, 0.95);
+  border-color: rgba(0, 0, 0, 0.08);
+  box-shadow: 0 10px 40px rgba(0,0,0,0.08);
+}
+[data-theme="light"] .user-dropdown-menu a:hover, 
+[data-theme="light"] .user-dropdown-menu button:hover {
+  background: rgba(0, 0, 0, 0.03);
+}
+
+@media (max-width: 768px) {
+  [data-theme="light"] .navbar-links {
+    background: rgba(249, 246, 240, 0.98);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  }
+}

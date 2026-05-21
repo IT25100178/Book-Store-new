@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
+import UploadProfilePicture from './UploadProfilePicture';
 
 export default function EditProfile() {
   const { user, updateUserProfile } = useAuth();
@@ -54,6 +55,7 @@ export default function EditProfile() {
 
   return (
     <div className="edit-profile-wrapper" style={{ padding: '24px' }}>
+      <UploadProfilePicture />
       
       {/* ── Form Section ── */}
       <div className="edit-profile-form-area" style={{ marginTop: 0 }}>

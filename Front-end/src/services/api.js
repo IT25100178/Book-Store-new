@@ -33,8 +33,14 @@ async function request(method, endpoint, body = null) {
 // ── Auth (Member 1 – Athethan) ────────────────────────────────────────────────
 
 export const auth = {
-  register: (name, email, password, phone) =>
-    request('POST', '/auth/register', { name, email, password, phone }),
+  register: (name, email, password, countryCode, contactNumber) =>
+    request('POST', '/auth/register', {
+      name,
+      email,
+      password,
+      countryCode,
+      contactNumber: contactNumber ? Number(contactNumber) : null
+    }),
 
   login: (email, password) =>
     request('POST', '/auth/login', { email, password }),
@@ -117,6 +123,15 @@ export const users = {
   update: (userId, fields) =>
     request('PUT', `/users/${userId}`, fields),
 
+  uploadProfileImage: (userId, fileName, fileData) =>
+    request('POST', '/user/profile/upload-image', { userId, fileName, fileData }),
+
+  updateProfileImage: (userId, fileName, fileData) =>
+    request('PUT', '/user/profile/update-image', { userId, fileName, fileData }),
+
+  removeProfileImage: (userId) =>
+    request('DELETE', '/user/profile/remove-image', { userId }),
+
   changePassword: (userId, oldPassword, newPassword) =>
     request('POST', `/users/${userId}/change-password`, { oldPassword, newPassword }),
 
@@ -169,6 +184,15 @@ export const admin = {
   updateOrderStatus: (orderId, status) =>
     request('PUT', `/orders/${orderId}/status`, { status }),
 
+  uploadProfileImage: (adminId, fileName, fileData) =>
+    request('POST', '/admin/profile/upload-image', { adminId, fileName, fileData }),
+
+  updateProfileImage: (adminId, fileName, fileData) =>
+    request('PUT', '/admin/profile/update-image', { adminId, fileName, fileData }),
+
+  removeProfileImage: (adminId) =>
+    request('DELETE', '/admin/profile/remove-image', { adminId }),
+
   getSalesSummary: () =>
     request('GET', '/orders/summary'),
 
@@ -183,8 +207,8 @@ export const admin = {
     request('DELETE', `/admin/reviews/${reviewId}`),
 
   // Reviews reply & moderation
-  replyToReview: (reviewId, adminId, adminReply) =>
-    request('POST', `/admin/reviews/${reviewId}/reply`, { adminId, adminReply }),
+  replyToReview: (reviewId, adminId, reply) =>
+    request('POST', `/admin/reviews/${reviewId}/reply?adminId=${adminId}`, { reply }),
 
   complainReview: (reviewId, adminId, reason) =>
     request('POST', `/admin/reviews/${reviewId}/complain`, { adminId, reason }),
@@ -246,14 +270,14 @@ export const articles = {
 // ── Payment Cards (Online Payment Feature) ───────────────────────────────────
 export const cards = {
   get: (userId) =>
-    request('GET', `/cards/${userId}`),
+    request('GET', `/payment-cards/user/${userId}`),
 
-  save: (userId, cardNumber, expiryDate) =>
-    request('POST', '/cards', { userId, cardNumber, expiryDate }),
+  save: (userId, cardNumber, expiryDate, cardHolderName, cardNickname, isDefault, cvv) =>
+    request('POST', '/payment-cards', { userId, cardNumber, expiryDate, cardHolderName, cardNickname, isDefault, cvv }),
 
-  update: (cardId, expiryDate) =>
-    request('PUT', `/cards/${cardId}`, { expiryDate }),
+  update: (cardId, fields) =>
+    request('PUT', `/payment-cards/${cardId}`, fields),
 
-  delete: (cardId) =>
-    request('DELETE', `/cards/${cardId}`),
+  delete: (cardId, fields) =>
+    request('DELETE', `/payment-cards/${cardId}`, fields),
 };

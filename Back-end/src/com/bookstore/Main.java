@@ -51,13 +51,23 @@ public class Main {
         server.createContext("/api/checkout/payment", new OrderHandler());
         server.createContext("/api/cards", new com.bookstore.handlers.PaymentCardHandler());
         server.createContext("/api/payment/cards", new com.bookstore.handlers.PaymentCardHandler());
+        server.createContext("/api/payment-cards", new com.bookstore.handlers.PaymentCardHandler());
         server.createContext("/api/users", new UserHandler());
+        server.createContext("/api/user/upload-profile-image", new UserProfileImageHandler(false));
+        server.createContext("/api/user/profile/upload-image", new UserProfileImageHandler(false));
+        server.createContext("/api/user/profile/update-image", new UserProfileImageHandler(false));
+        server.createContext("/api/user/profile/remove-image", new UserProfileImageHandler(false));
         server.createContext("/api/admin", new AdminHandler());
+        server.createContext("/api/admin/upload-profile-image", new UserProfileImageHandler(true));
+        server.createContext("/api/admin/profile/upload-image", new UserProfileImageHandler(true));
+        server.createContext("/api/admin/profile/update-image", new UserProfileImageHandler(true));
+        server.createContext("/api/admin/profile/remove-image", new UserProfileImageHandler(true));
         server.createContext("/api/messages", new MessageHandler());
         server.createContext("/api/authors", new AuthorHandler());
         server.createContext("/api/faqs", new FAQHandler());
         server.createContext("/api/articles", new ArticleHandler());
         server.createContext("/api/admin/reviews", new AdminReviewHandler());
+        server.createContext("/uploads", new StaticFileHandler("Back-end/uploads"));
 
         // Thread pool to handle concurrent requests
         server.setExecutor(Executors.newFixedThreadPool(10));
@@ -83,11 +93,22 @@ public class Main {
         System.out.println("║  POST  /api/orders/place                      ║");
         System.out.println("║  GET   /api/cards/{userId}                    ║");
         System.out.println("║  GET   /api/payment/cards/{userId}            ║");
+        System.out.println("║  GET   /api/payment-cards/user/{userId}       ║");
         System.out.println("║  PUT   /api/cards/{id}                        ║");
+        System.out.println("║  PUT   /api/payment-cards/{id}                ║");
         System.out.println("║  DELETE /api/cards/{id}                       ║");
+        System.out.println("║  DELETE /api/payment-cards/{id}               ║");
         System.out.println("║  GET   /api/orders/{userId}                   ║");
         System.out.println("║  GET   /api/users/{id}                        ║");
         System.out.println("║  PUT   /api/users/{id}                        ║");
+        System.out.println("║  POST  /api/user/upload-profile-image         ║");
+        System.out.println("║  POST  /api/user/profile/upload-image         ║");
+        System.out.println("║  PUT   /api/user/profile/update-image         ║");
+        System.out.println("║  DELETE /api/user/profile/remove-image        ║");
+        System.out.println("║  POST  /api/admin/upload-profile-image        ║");
+        System.out.println("║  POST  /api/admin/profile/upload-image        ║");
+        System.out.println("║  PUT   /api/admin/profile/update-image        ║");
+        System.out.println("║  DELETE /api/admin/profile/remove-image       ║");
         System.out.println("║  GET   /api/users/{id}/wishlist               ║");
         System.out.println("║  POST  /api/users/{id}/wishlist               ║");
         System.out.println("║  GET, POST, PUT, DELETE /api/messages         ║");

@@ -304,3 +304,76 @@
     transform: translateY(0);
   }
 }
+
+/* ── Light Mode Support ── */
+[data-theme="light"] .checkout-page {
+  color: #1a1a1a;
+}
+[data-theme="light"] .checkout-section {
+  background: #ffffff;
+  border-color: rgba(179, 143, 67, 0.2);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+}
+[data-theme="light"] .form-field label {
+  color: #4a4a4a;
+}
+[data-theme="light"] .form-field input {
+  background: #ffffff;
+  border-color: rgba(179, 143, 67, 0.25);
+  color: #1a1a1a;
+}
+[data-theme="light"] .form-field input:focus {
+  border-color: #b38f43;
+}
+[data-theme="light"] .delivery-option {
+  background: #ffffff;
+  border-color: rgba(179, 143, 67, 0.2);
+}
+[data-theme="light"] .delivery-option:hover,
+[data-theme="light"] .delivery-option.selected {
+  border-color: #b38f43;
+  background: rgba(179, 143, 67, 0.06);
+}
+[data-theme="light"] .delivery-info span {
+  color: #7c7c7c;
+}
+[data-theme="light"] .delivery-price {
+  color: #b38f43;
+}
+[data-theme="light"] .payment-option {
+  background: #ffffff;
+  border-color: rgba(179, 143, 67, 0.2);
+}
+[data-theme="light"] .payment-option:hover,
+[data-theme="light"] .payment-option.selected {
+  border-color: #b38f43;
+  background: rgba(179, 143, 67, 0.06);
+}
+[data-theme="light"] .payment-info span {
+  color: #7c7c7c;
+}
+[data-theme="light"] .checkout-summary {
+  background: #ffffff;
+  border-color: rgba(179, 143, 67, 0.25);
+  box-shadow: 0 10px 40px rgba(0,0,0,0.04);
+}
+[data-theme="light"] .summary-item {
+  border-bottom-color: rgba(179, 143, 67, 0.15);
+}
+[data-theme="light"] .summary-item-qty {
+  color: #7c7c7c;
+}
+[data-theme="light"] .summary-item-price {
+  color: #b38f43;
+}
+[data-theme="light"] .s-row.total-row {
+  border-top-color: rgba(179, 143, 67, 0.2);
+  color: #b38f43;
+}
+[data-theme="light"] .save-address-label {
+  color: #4a4a4a;
+}
+[data-theme="light"] .credit-card-form {
+  background: #fdfcf9;
+  border-color: rgba(179, 143, 67, 0.25);
+}

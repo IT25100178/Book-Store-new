@@ -102,7 +102,12 @@ const EyeBall = ({ size = 48, pupilSize = 16, maxDistance = 10, eyeColor = "whit
 
 
 function Register() {
-  const [formData, setFormData] = useState({ name: '', email: '', password: '', confirmPassword: '', phone: '' });
+  const [formData, setFormData] = useState({ name: '', email: '', password: '', confirmPassword: '' });
+  const [countryCode, setCountryCode] = useState('+94');
+  const [contactNumber, setContactNumber] = useState('');
+  const [phoneError, setPhoneError] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [dropdownOpen, setDropdownOpen] = useState(false);
   const [focusedField,        setFocusedField]        = useState(null);
   const [showPassword,        setShowPassword]        = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -110,6 +115,14 @@ function Register() {
   const [isLoading,           setIsLoading]           = useState(false);
   const [showSuccess,         setShowSuccess]         = useState(false);
   const [agreeTerms,          setAgreeTerms]          = useState(false);
+
+  const countries = [
+    { code: '+94', name: 'Sri Lanka', flag: '🇱🇰', digits: 9 },
+    { code: '+91', name: 'India', flag: '🇮🇳', digits: 10 },
+    { code: '+65', name: 'Singapore', flag: '🇸🇬', digits: 8 },
+    { code: '+44', name: 'United Kingdom', flag: '🇬🇧', digits: 10 },
+    { code: '+1',  name: 'United States', flag: '🇺🇸', digits: 10 }
+  ];
 
   // Animation States
   const [mouseX, setMouseX] = useState(0);
@@ -213,6 +226,37 @@ function Register() {
     setError('');
   };
 
+  const validatePhone = (code, number) => {
+    if (!number) {
+      return 'Contact number is required';
+    }
+    if (!/^\d+$/.test(number)) {
+      return 'Contact number must contain only digits.';
+    }
+    const country = countries.find(c => c.code === code);
+    if (country && number.length !== country.digits) {
+      return 'Invalid phone number for selected country.';
+    }
+    return '';
+  };
+
+  const handlePhoneChange = (e) => {
+    // 1. Accept only digits. Do not allow string, letters, symbols, or spaces
+    const value = e.target.value.replace(/\D/g, '');
+    setContactNumber(value);
+    const err = validatePhone(countryCode, value);
+    setPhoneError(err);
+    setError('');
+  };
+
+  const handleCountrySelect = (code) => {
+    setCountryCode(code);
+    const err = validatePhone(code, contactNumber);
+    setPhoneError(err);
+    setDropdownOpen(false);
+    setError('');
+  };
+
   const calculatePasswordStrength = (pwd) => {
     let strength = 0;
     if (pwd.length >= 8) strength++;
@@ -227,7 +271,10 @@ function Register() {
 
   const passwordStrength = calculatePasswordStrength(formData.password);
   const passwordsMatch = formData.password === formData.confirmPassword;
-  const isFormValid = formData.name && formData.email && formData.password && passwordsMatch && agreeTerms;
+  
+  // Phone validations required for submit
+  const isPhoneValid = countryCode && contactNumber && !phoneError && validatePhone(countryCode, contactNumber) === '';
+  const isFormValid = formData.name && formData.email && formData.password && passwordsMatch && agreeTerms && isPhoneValid;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -235,10 +282,17 @@ function Register() {
     if (!passwordsMatch) { setError('Passwords do not match'); return; }
     if (formData.password.length < 6) { setError('Password must be at least 6 characters'); return; }
 
+    const phoneErr = validatePhone(countryCode, contactNumber);
+    if (phoneErr) {
+      setPhoneError(phoneErr);
+      setError(phoneErr);
+      return;
+    }
+
     setError('');
     setIsLoading(true);
 
-    const result = await register(formData.name, formData.email, formData.password, formData.phone);
+    const result = await register(formData.name, formData.email, formData.password, countryCode, contactNumber);
     if (result.success) {
       setShowSuccess(true);
       setTimeout(() => navigate('/'), 2000);
@@ -433,7 +487,6 @@ function Register() {
             {[
               { key: 'name',  label: 'Full Name',      icon: '👤', type: 'text'  },
               { key: 'email', label: 'Email Address',   icon: '✉️', type: 'email' },
-              { key: 'phone', label: 'Phone (optional)', icon: '📱', type: 'tel'  },
             ].map(({ key, label, icon, type }) => (
               <div key={key} className={`form-group ${focusedField === key ? 'focused' : ''}`}>
                 <div className="input-wrapper">
@@ -446,13 +499,97 @@ function Register() {
                     onFocus={() => setFocusedField(key)}
                     onBlur={() => setFocusedField(null)}
                     placeholder=" "
-                    required={key !== 'phone'}
+                    required
                   />
                   <label>{label}</label>
                   <div className="input-border"></div>
                 </div>
               </div>
             ))}
+
+            {/* Custom Searchable Country Code & Phone Input */}
+            <div className={`form-group ${focusedField === 'phone' ? 'focused' : ''}`}>
+              <label style={{ display: 'block', fontSize: '12px', color: 'var(--secondary)', marginBottom: '6px', fontWeight: '600' }}>
+                Contact Number
+              </label>
+              <div className="phone-row">
+                {/* Searchable Dropdown */}
+                <div className="country-selector-container">
+                  <button
+                    type="button"
+                    className={`country-selector-trigger ${dropdownOpen ? 'active' : ''}`}
+                    onClick={() => setDropdownOpen(!dropdownOpen)}
+                  >
+                    <div className="country-trigger-content">
+                      <span className="country-flag">
+                        {countries.find(c => c.code === countryCode)?.flag || '🇱🇰'}
+                      </span>
+                      <span className="country-code-val">{countryCode}</span>
+                    </div>
+                    <span className="dropdown-caret">▼</span>
+                  </button>
+
+                  {dropdownOpen && (
+                    <div className="country-dropdown-panel">
+                      <div className="country-search-box">
+                        <span className="search-icon-small">🔍</span>
+                        <input
+                          type="text"
+                          className="country-search-input"
+                          placeholder="Search country..."
+                          value={searchQuery}
+                          onChange={(e) => setSearchQuery(e.target.value)}
+                          autoFocus
+                        />
+                      </div>
+                      <div className="country-options-list">
+                        {countries
+                          .filter(c =>
+                            c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                            c.code.includes(searchQuery)
+                          )
+                          .map(c => (
+                            <div
+                              key={c.code}
+                              className={`country-option-item ${countryCode === c.code ? 'selected' : ''}`}
+                              onClick={() => handleCountrySelect(c.code)}
+                            >
+                              <div className="option-left">
+                                <span className="country-flag">{c.flag}</span>
+                                <span>{c.name}</span>
+                              </div>
+                              <span className="option-code">{c.code}</span>
+                            </div>
+                          ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Numeric Phone Input */}
+                <div className="phone-input-wrapper">
+                  <div className="input-wrapper">
+                    <input
+                      type="text"
+                      name="phone"
+                      value={contactNumber}
+                      onChange={handlePhoneChange}
+                      onFocus={() => setFocusedField('phone')}
+                      onBlur={() => setFocusedField(null)}
+                      placeholder=" "
+                      required
+                    />
+                    <label>Phone Number</label>
+                    <div className="input-border"></div>
+                  </div>
+                </div>
+              </div>
+              {phoneError && (
+                <div className="phone-error-message">
+                  ⚠️ {phoneError}
+                </div>
+              )}
+            </div>
 
             {/* Password */}
             <div className={`form-group ${focusedField === 'password' ? 'focused' : ''}`}>

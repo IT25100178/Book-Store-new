@@ -58,9 +58,21 @@ public class PaymentCardService {
         if (changed) writeAllCards(all);
     }
 
-    public Map<String, Object> saveCard(String userId, String cardNumber, String expiryDate, String cardNickname, boolean isDefault) {
+    public Map<String, Object> saveCard(String userId, String cardNumber, String expiryDate, String cardHolderName, String cardNickname, boolean isDefault, String cvv) {
         Map<String, Object> result = new LinkedHashMap<>();
         
+        if (userId == null || userId.isBlank()) {
+            result.put("success", false);
+            result.put("message", "User ID is required");
+            return result;
+        }
+
+        if (cardHolderName == null || cardHolderName.isBlank()) {
+            result.put("success", false);
+            result.put("message", "Card holder name is required");
+            return result;
+        }
+
         if (cardNumber == null || cardNumber.isBlank()) {
             result.put("success", false);
             result.put("message", "Card number is required");
@@ -74,9 +86,15 @@ public class PaymentCardService {
         }
 
         String cleanNum = cardNumber.replaceAll("\\D+", "");
-        if (cleanNum.length() < 13 || cleanNum.length() > 19) {
+        if (cleanNum.length() != 16 || !isValidCardNumber(cleanNum)) {
             result.put("success", false);
-            result.put("message", "Invalid card number. Must be between 13 and 19 digits.");
+            result.put("message", "Invalid card number. Must be exactly 16 digits and pass Luhn validation.");
+            return result;
+        }
+
+        if (cvv == null || !cvv.matches("^\\d{3}$")) {
+            result.put("success", false);
+            result.put("message", "CVV must be exactly 3 digits.");
             return result;
         }
 
@@ -87,7 +105,6 @@ public class PaymentCardService {
             return result;
         }
 
-        // Parse month and year to check if future date
         try {
             int expMonth = Integer.parseInt(cleanExpiry.substring(0, 2));
             int expYear = Integer.parseInt(cleanExpiry.substring(3, 5)) + 2000;
@@ -114,7 +131,7 @@ public class PaymentCardService {
         String id = "CARD" + System.currentTimeMillis();
         String token = "tok_" + UUIDUtil.random(); // mock token
 
-        PaymentCard card = new PaymentCard(id, userId, token, last4, brand, cleanExpiry, cardNickname, isDefault);
+        PaymentCard card = new PaymentCard(id, userId, token, last4, brand, cardHolderName, cleanExpiry, cardNickname, isDefault);
 
         if (isDefault) {
             clearDefaultCardForUser(userId);
@@ -127,15 +144,69 @@ public class PaymentCardService {
         return result;
     }
 
-    public Map<String, Object> updateCard(String cardId, String userId, String newExpiry, String cardNickname, boolean isDefault) {
+    private boolean isValidCardNumber(String number) {
+        if (number == null || !number.matches("^\\d{16}$")) {
+            return false;
+        }
+        int sum = 0;
+        boolean alternate = false;
+        for (int i = number.length() - 1; i >= 0; i--) {
+            int n = Integer.parseInt(number.substring(i, i + 1));
+            if (alternate) {
+                n *= 2;
+                if (n > 9) {
+                    n -= 9;
+                }
+            }
+            sum += n;
+            alternate = !alternate;
+        }
+        return (sum % 10 == 0);
+    }
+
+    public Map<String, Object> updateCard(String cardId, String userId, String cardNumber, String cardHolderName, String newExpiry, String cardNickname, boolean isDefault, String cvv) {
         Map<String, Object> result = new LinkedHashMap<>();
         List<PaymentCard> all = readAllCards();
         boolean found = false;
 
+        if (newExpiry != null && !newExpiry.isBlank() && !newExpiry.matches("(0[1-9]|1[0-2])/\\d{2}")) {
+            result.put("success", false);
+            result.put("message", "Invalid expiry date format. Use MM/YY.");
+            return result;
+        }
+
         for (PaymentCard c : all) {
             if (c.getId().equals(cardId) && c.getUserId().equals(userId)) {
-                c.setExpiry(newExpiry);
-                if (cardNickname != null) c.setCardNickname(cardNickname);
+                if (cardNumber != null && !cardNumber.isBlank()) {
+                    String cleanNum = cardNumber.replaceAll("\\D+", "");
+                    if (cleanNum.length() != 16 || !isValidCardNumber(cleanNum)) {
+                        result.put("success", false);
+                        result.put("message", "Invalid card number. Must be exactly 16 digits and pass Luhn validation.");
+                        return result;
+                    }
+                    if (cvv == null || !cvv.matches("^\\d{3}$")) {
+                        result.put("success", false);
+                        result.put("message", "CVV must be exactly 3 digits when changing card number.");
+                        return result;
+                    }
+                    String last4 = cleanNum.substring(cleanNum.length() - 4);
+                    String brand = cleanNum.startsWith("4") ? "Visa" : 
+                                   cleanNum.startsWith("5") ? "Mastercard" : 
+                                   cleanNum.startsWith("3") ? "Amex" : "Other";
+                    c.setCardToken("tok_" + UUIDUtil.random());
+                    c.setLast4(last4);
+                    c.setBrand(brand);
+                }
+
+                if (cardHolderName != null && !cardHolderName.isBlank()) {
+                    c.setCardHolderName(cardHolderName);
+                }
+                if (newExpiry != null && !newExpiry.isBlank()) {
+                    c.setExpiry(newExpiry);
+                }
+                if (cardNickname != null) {
+                    c.setCardNickname(cardNickname);
+                }
                 c.setDefault(isDefault);
                 found = true;
                 break;

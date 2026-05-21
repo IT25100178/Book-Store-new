@@ -11,18 +11,20 @@ public class PaymentCard {
     private String cardToken;
     private String last4;
     private String brand;
+    private String cardHolderName;
     private String expiry;
     private String cardNickname;
     private boolean isDefault;
 
     public PaymentCard() {}
 
-    public PaymentCard(String id, String userId, String cardToken, String last4, String brand, String expiry, String cardNickname, boolean isDefault) {
+    public PaymentCard(String id, String userId, String cardToken, String last4, String brand, String cardHolderName, String expiry, String cardNickname, boolean isDefault) {
         this.id = id;
         this.userId = userId;
         this.cardToken = cardToken;
         this.last4 = last4;
         this.brand = brand;
+        this.cardHolderName = cardHolderName;
         this.expiry = expiry;
         this.cardNickname = cardNickname;
         this.isDefault = isDefault;
@@ -43,6 +45,9 @@ public class PaymentCard {
     public String getBrand() { return brand; }
     public void setBrand(String brand) { this.brand = brand; }
 
+    public String getCardHolderName() { return cardHolderName; }
+    public void setCardHolderName(String cardHolderName) { this.cardHolderName = cardHolderName; }
+
     public String getExpiry() { return expiry; }
     public void setExpiry(String expiry) { this.expiry = expiry; }
 
@@ -52,31 +57,32 @@ public class PaymentCard {
     public boolean isDefault() { return isDefault; }
     public void setDefault(boolean isDefault) { this.isDefault = isDefault; }
 
-    /** Format: id|userId|cardToken|last4|brand|expiry|cardNickname|isDefault */
+    /** Format: id|userId|cardToken|last4|brand|cardHolderName|expiry|cardNickname|isDefault */
     public String toFileLine() {
         return String.join("|",
             safe(id), safe(userId), safe(cardToken),
-            safe(last4), safe(brand), safe(expiry)
-            , safe(cardNickname), String.valueOf(isDefault)
+            safe(last4), safe(brand), safe(cardHolderName), safe(expiry),
+            safe(cardNickname), String.valueOf(isDefault)
         );
     }
 
     public static PaymentCard fromFileLine(String line) {
         String[] p = line.split("\\|", -1);
-        if (p.length < 8) return null;
-        return new PaymentCard(p[0], p[1], p[2], p[3], p[4], p[5], p[6], Boolean.parseBoolean(p[7]));
+        if (p.length < 9) return null;
+        return new PaymentCard(p[0], p[1], p[2], p[3], p[4], p[5], p[6], p[7], Boolean.parseBoolean(p[8]));
     }
 
     public String toJson() {
         return "{"
-            + "\"id\":\"" + esc(id) + "\","
-            + "\"userId\":\"" + esc(userId) + "\","
-            + "\"cardToken\":\"" + esc(cardToken) + "\"," 
+            + "\"id\":\"" + esc(id) + "\"," 
+            + "\"userId\":\"" + esc(userId) + "\"," 
             + "\"last4\":\"" + esc(last4) + "\"," 
             + "\"brand\":\"" + esc(brand) + "\"," 
+            + "\"cardHolderName\":\"" + esc(cardHolderName) + "\"," 
             + "\"expiry\":\"" + esc(expiry) + "\"," 
             + "\"cardNickname\":\"" + esc(cardNickname) + "\"," 
-            + "\"isDefault\":" + isDefault
+            + "\"isDefault\":" + isDefault + ","
+            + "\"maskedNumber\":\"**** **** **** " + esc(last4) + "\""
             + "}";
     }
 

@@ -33,7 +33,7 @@ public class AuthHandler extends BaseHandler {
                 Map<String, String> data = FileStorage.parseJsonBody(body);
 
                 if (path.endsWith("/register")) {
-                    handleRegister(exchange, data);
+                    handleRegister(exchange, body);
                 } else if (path.endsWith("/login")) {
                     handleLogin(exchange, data);
                 } else if (path.endsWith("/forgot-password")) {
@@ -51,14 +51,30 @@ public class AuthHandler extends BaseHandler {
 
     // ── /api/auth/register ────────────────────────────────────────────────────
 
-    private void handleRegister(HttpExchange exchange, Map<String, String> data)
+    private void handleRegister(HttpExchange exchange, String rawBody)
             throws IOException {
-        String name     = data.get("name");
-        String email    = data.get("email");
-        String password = data.get("password");
-        String phone    = data.getOrDefault("phone", "");
+        // Clean spaces to match regardless of layout formatting
+        String normalized = rawBody.replaceAll("\\s+", "");
+        if (normalized.contains("\"contactNumber\":\"")) {
+            sendBadRequest(exchange, "Contact number must contain only digits.");
+            return;
+        }
 
-        Map<String, Object> result = authService.register(name, email, password, phone);
+        // Parse fields
+        Map<String, String> bodyData = FileStorage.parseJsonBody(rawBody);
+        String name          = bodyData.get("name");
+        String email         = bodyData.get("email");
+        String password      = bodyData.get("password");
+        String countryCode   = bodyData.get("countryCode");
+        String contactNumber = bodyData.get("contactNumber");
+
+        // Validate type manually if they sent string letters or symbols
+        if (contactNumber == null || contactNumber.trim().isEmpty()) {
+            sendBadRequest(exchange, "Contact number is required");
+            return;
+        }
+
+        Map<String, Object> result = authService.register(name, email, password, countryCode, contactNumber);
 
         if (Boolean.TRUE.equals(result.get("success"))) {
             sendCreated(exchange, buildResultJson(result));

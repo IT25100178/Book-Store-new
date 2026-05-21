@@ -312,6 +312,7 @@ public class UserService {
         Map<String, Object> result = new LinkedHashMap<>();
         List<Review> all = readAllReviews();
         boolean found = false;
+        Review updatedReview = null;
 
         // Ensure user is admin and not blocked
         User user = findById(userId);
@@ -326,6 +327,7 @@ public class UserService {
                 r.setAdminReply(replyText);
                 r.setAdminRepliedAt(LocalDateTime.now().toString());
                 found = true;
+                updatedReview = r;
                 break;
             }
         }
@@ -339,6 +341,7 @@ public class UserService {
         FileStorage.writeLines(REVIEWS_FILE, all.stream().map(Review::toFileLine).collect(Collectors.toList()));
         result.put("success", true);
         result.put("message", "Reply added successfully");
+        result.put("review", updatedReview);
         return result;
     }
 

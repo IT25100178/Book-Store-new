@@ -330,3 +330,91 @@
   from { transform: translateX(100%); opacity: 0; }
   to   { transform: translateX(0);    opacity: 1; }
 }
+
+/* ── Light Mode Support ── */
+[data-theme="light"] .cart-page {
+  color: #1a1a1a;
+}
+[data-theme="light"] .cart-item-card {
+  background: #ffffff;
+  border-color: rgba(179, 143, 67, 0.2);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+}
+[data-theme="light"] .cart-item-card:hover {
+  border-color: rgba(179, 143, 67, 0.4);
+  box-shadow: 0 8px 30px rgba(179, 143, 67, 0.08);
+}
+[data-theme="light"] .cart-item-category {
+  color: #7c7c7c;
+}
+[data-theme="light"] .qty-controls {
+  background: #fcfbf9;
+  border: 1px solid rgba(179, 143, 67, 0.15);
+}
+[data-theme="light"] .qty-btn {
+  background: rgba(179, 143, 67, 0.1);
+  color: #b38f43;
+}
+[data-theme="light"] .qty-btn:hover {
+  background: rgba(179, 143, 67, 0.25);
+}
+[data-theme="light"] .qty-display {
+  color: #1a1a1a;
+}
+[data-theme="light"] .cart-item-current {
+  color: #b38f43;
+}
+[data-theme="light"] .cart-item-original {
+  color: #7c7c7c;
+}
+[data-theme="light"] .save-later-btn, 
+[data-theme="light"] .remove-btn {
+  background: #ffffff;
+  border-color: rgba(179, 143, 67, 0.2);
+  color: #4a4a4a;
+}
+[data-theme="light"] .save-later-btn:hover {
+  background: rgba(179, 143, 67, 0.1);
+  color: #b38f43;
+}
+[data-theme="light"] .remove-btn:hover {
+  background: rgba(220, 50, 50, 0.08);
+  color: #dc3232;
+  border-color: rgba(220, 50, 50, 0.2);
+}
+[data-theme="light"] .order-summary-card {
+  background: #ffffff;
+  border-color: rgba(179, 143, 67, 0.25);
+  box-shadow: 0 10px 40px rgba(0,0,0,0.04);
+}
+[data-theme="light"] .summary-row {
+  border-bottom-color: rgba(179, 143, 67, 0.15);
+  color: #4a4a4a;
+}
+[data-theme="light"] .summary-row strong {
+  color: #1a1a1a;
+}
+[data-theme="light"] .summary-total {
+  color: #1a1a1a;
+}
+[data-theme="light"] .discount-section label {
+  color: #4a4a4a;
+}
+[data-theme="light"] .discount-input-row input {
+  background: #ffffff;
+  border-color: rgba(179, 143, 67, 0.25);
+  color: #1a1a1a;
+}
+[data-theme="light"] .saved-section h3 {
+  color: #4a4a4a;
+}
+[data-theme="light"] .saved-item {
+  background: #ffffff;
+  border-color: rgba(179, 143, 67, 0.2);
+}
+[data-theme="light"] .saved-info strong {
+  color: #1a1a1a;
+}
+[data-theme="light"] .saved-info span {
+  color: #b38f43;
+}
