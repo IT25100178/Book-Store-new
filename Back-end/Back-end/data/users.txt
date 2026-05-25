@@ -1,5 +1,5 @@
 ADMIN001|Luxury Admin|admin@luxurybooks.com|admin123|(+94)742624977|132/1 Thalaiyadi Lane Jaffna|ADMIN||2024-01-01||false
-USR1779184175493|Athy Athethan|athyathethan@gmail.com|#Athy2004#|||USER|https://ui-avatars.com/api/?background=D4AF37&color=fff&name=Athy+Athethan|2026-05-19||false
+USR1779184175493|Athy Athethan658454637946|athyathethan@gmail.com|1234567890|123456789|ascvbnm,.|USER|https://ui-avatars.com/api/?background=D4AF37&color=fff&name=Athy+Athethan|2026-05-19|awrestrdytfuygijhlk|false
 USR1779188307518|Athy Athethan|athyathethan2@gmail.com|#Athymoly24#|||USER|https://ui-avatars.com/api/?background=D4AF37&color=fff&name=Athy+Athethan|2026-05-19||false
 USR1779259620323|Athy Athethan|athyathethan1@gmail.com|123456789|0743645172||USER|https://ui-avatars.com/api/?background=D4AF37&color=fff&name=Athy+Athethan|2026-05-20||false
 ADMIN001|Luxury Admin|admin@luxurybooks.com|admin123|(+94)742624977|132/1 Thalaiyadi Lane Jaffna|ADMIN||2024-01-01||false
@@ -7,10 +7,12 @@ USR1779090577710|Inmoli ravi|inmoli@gmail.com|00000000|||USER|https://ui-avatars
 USR1779184175493|Athy Athethan|athyathethan@gmail.com|#Athy2004#|||USER|https://ui-avatars.com/api/?background=D4AF37&color=fff&name=Athy+Athethan|2026-05-19||false
 USR1779237389009|R.Inmoly Athy|insuinmoli@gmail.com|123456789|0743645172||USER|https://ui-avatars.com/api/?background=D4AF37&color=fff&name=R.Inmoly|2026-05-20||false
 USR1779266176882|asdfghjk|asdfghjk@gmail.com|123456789|123456789||USER|https://ui-avatars.com/api/?background=D4AF37&color=fff&name=asdfghjk|2026-05-20||false
-USR1779295085270|qwertyuio|valanvishok23@gmail.com|athy02@|123456789|qwertyuio, jaffna, jaffna, wertyujkl 40000, Sri Lanka - Phone: 123456789|USER|https://ui-avatars.com/api/?background=D4AF37&color=fff&name=qwertyuio|2026-05-20||false
+USR1779295085270|qwertyuiodwcdec432|valanvishok23@gmail.com|athy02@|123456789|qwertyuio, jaffna, jaffna, wertyujkl 40000, Sri Lanka - Phone: 123456789|USER|http://localhost:8080/uploads/profile-images/94bd7b5d-dbc9-4579-a65b-51e49f4ad8d4.jpg|2026-05-20||false
 USR1779303147117|gcasvd|andbfsbdfhb@gmail.com|1234567890|dfsdfda||USER|https://ui-avatars.com/api/?background=D4AF37&color=fff&name=gcasvd|2026-05-21||false
 USR1779321939107|wstrtrfhlhuf|shctjt@gmail.com|1234567890|098765432||USER|https://ui-avatars.com/api/?background=D4AF37&color=fff&name=wstrtrfhlhuf|2026-05-21||false
 USR1779329645949|Test User|testuser@gmail.com|password123|||USER|https://ui-avatars.com/api/?background=D4AF37&color=fff&name=Test+User|2026-05-21||false
 USR1779329882138|kavin|valanvishok528@gmail.com|Inmoli2@|1234567890|jaffna|USER|https://ui-avatars.com/api/?background=D4AF37&color=fff&name=kavin|2026-05-21||false
 USR1779345566766|Tester Correct|tester_correct@gmail.com|password123|+94771234567||USER|https://ui-avatars.com/api/?background=D4AF37&color=fff&name=Tester+Correct|2026-05-21||false
 USR1779345618930|Tester SG Correct|tester_sg_correct@gmail.com|password123|+6581234567||USER|https://ui-avatars.com/api/?background=D4AF37&color=fff&name=Tester+SG+Correct|2026-05-21||false
+USR1779349511524|abishanan|abishanan123@gmail.com|12345678|+94123456789||USER|https://ui-avatars.com/api/?background=D4AF37&color=fff&name=abishanan|2026-05-21||false
+USR1779365856523|Valan Vishok|test@gmail.com|admin123|+94123456789|jaffna|USER|https://ui-avatars.com/api/?background=D4AF37&color=fff&name=Test|2026-05-21|grgerhe|false

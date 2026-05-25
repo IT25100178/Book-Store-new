@@ -8,13 +8,13 @@ A full-stack book store application built for the Object-Oriented Programming mo
 
 | # | Member       | Area                        |
 |---|-------------|------------------------------|
-| 1 | **Athethan**  | Authentication + Home Page + Contact |
-| 2 | **Deepika**   | Book Listing + Search + review |
+| 1 | **Athethan**  | Authentication + Home Page + Admin Panel|
+| 2 | **Deepika**   | Book Listing + Search + review + Admin Panel|
 | 3 | **Yuvaniya**  | Admin Panel        |
-| 4 | **Lojeni**    | Cart System + Admin Panel   |
-| 5 | **Vishnu**    | Checkout System            |
-| 6 | **Vishok**    | User Profile                |
-| 7 | **Vishahan**  | Book Details                |
+| 4 | **Lojeni**    | Cart System + Admin Panel |
+| 5 | **Vishnu**    | Checkout System + Admin Panel|
+| 6 | **Vishok**    | User Profile + Admin Panel|
+| 7 | **Vishahan**  | Book Details + Admin Panel|
 
 ---
 
